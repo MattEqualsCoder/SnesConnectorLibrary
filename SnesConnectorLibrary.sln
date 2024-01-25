@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnesConnectorLibrary", "SnesConnectorLibrary\SnesConnectorLibrary.csproj", "{9E38726F-8150-48AF-8232-5D1CC1F85947}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnesConnectorTestApplication", "SnesConnectorTestApplication\SnesConnectorTestApplication.csproj", "{FCBC8F34-C4F8-4974-9550-D14AD5EA355B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9E38726F-8150-48AF-8232-5D1CC1F85947}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E38726F-8150-48AF-8232-5D1CC1F85947}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E38726F-8150-48AF-8232-5D1CC1F85947}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E38726F-8150-48AF-8232-5D1CC1F85947}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FCBC8F34-C4F8-4974-9550-D14AD5EA355B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCBC8F34-C4F8-4974-9550-D14AD5EA355B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCBC8F34-C4F8-4974-9550-D14AD5EA355B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCBC8F34-C4F8-4974-9550-D14AD5EA355B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
