@@ -2,6 +2,6 @@ namespace SnesConnectorLibrary;
 
 public class SnesDataReceivedEventArgs
 {
-    public SnesMemoryRequest Request { get; set; }
-    public SnesData Data { get; set; }
+    public required SnesMemoryRequest Request { get; set; }
+    public required SnesData Data { get; set; }
 }

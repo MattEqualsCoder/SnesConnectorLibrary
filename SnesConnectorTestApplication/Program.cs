@@ -23,34 +23,32 @@ public static class Program
             .BuildServiceProvider();
 
         var snesConnectorService = s_services.GetRequiredService<SnesConnectorService>();
-        snesConnectorService.Connect(SnesConnectorType.Usb2Snes);
-        
+        snesConnectorService.Connect(SnesConnectorType.Lua);
         snesConnectorService.AddScheduledRequest(new SnesScheduledMemoryRequest()
         {
             RequestType = SnesMemoryRequestType.GetAddress, 
             SnesMemoryDomain = SnesMemoryDomain.WRAM,
-            Address = 0x7e0020, 
-            Length = 1,
+            Address = 0x7e09C2, 
+            Length = 16,
             FrequencySeconds = 1,
             OnResponse = data =>
             {
-                Log.Information("Response: {Data} {Data2}", data.ReadUInt8(0x7e0020), data.Raw[0]);
+                Log.Information("Response: {Data} {Data2}", data.ReadUInt16(0x7e09C2), data.Raw[0]);
 
-                if (data.ReadUInt8(0x7e0020) > 0)
+                if (data.ReadUInt16(0x7e09C2) != 321)
                 {
                     snesConnectorService.MakeRequest(new SnesMemoryRequest()
                     {
                         RequestType = SnesMemoryRequestType.PutAddress,
                         SnesMemoryDomain = SnesMemoryDomain.WRAM,
                         Address = 0x7E09C2,
-                        Data = BitConverter.GetBytes((short)50).ToList()
+                        Data = BitConverter.GetBytes((short)321).ToList()
                     });
                 }
             },
             Filter = () =>
             {
                 var datetime = DateTime.Now.Second;
-                // Log.Information("Test: {Test}", datetime);
                 return datetime % 3 == 0;
             }
         });

@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using SnesConnectorLibrary.Usb2Snes;
+using SnesConnectorLibrary.Connectors;
 
 namespace SnesConnectorLibrary;
 
@@ -11,10 +11,11 @@ public class SnesConnectorService
     private List<SnesMemoryRequest> _queue = new();
     private List<SnesScheduledMemoryRequest> _scheduledRequests = new();
 
-    public SnesConnectorService(ILogger<SnesConnectorService> logger, Usb2SnesConnector usb2SnesConnector)
+    public SnesConnectorService(ILogger<SnesConnectorService> logger, Usb2SnesConnector usb2SnesConnector, LuaConnector luaConnector)
     {
         _logger = logger;
         _connectors[SnesConnectorType.Usb2Snes] = usb2SnesConnector;
+        _connectors[SnesConnectorType.Lua] = luaConnector;
     }
     
     public event EventHandler? OnConnected;

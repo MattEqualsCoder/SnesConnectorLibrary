@@ -3,7 +3,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Websocket.Client;
 
-namespace SnesConnectorLibrary.Usb2Snes;
+namespace SnesConnectorLibrary.Connectors;
 
 public class Usb2SnesConnector : ISnesConnector
 {

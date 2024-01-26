@@ -1,4 +1,4 @@
-namespace SnesConnectorLibrary.Usb2Snes;
+namespace SnesConnectorLibrary.Connectors;
 
 public class Usb2SnesDeviceListResponse
 {
