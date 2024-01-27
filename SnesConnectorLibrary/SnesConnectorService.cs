@@ -11,11 +11,14 @@ public class SnesConnectorService
     private List<SnesMemoryRequest> _queue = new();
     private List<SnesScheduledMemoryRequest> _scheduledRequests = new();
 
-    public SnesConnectorService(ILogger<SnesConnectorService> logger, Usb2SnesConnector usb2SnesConnector, LuaConnector luaConnector)
+    public SnesConnectorService(ILogger<SnesConnectorService> logger, Usb2SnesConnector usb2SnesConnector, LuaConnectorDefault luaConnectorDefault, LuaConnectorEmoTracker luaConnectorEmoTracker, LuaConnectorCrowdControl luaConnectorCrowdControl, LuaConnectorSni luaConnectorSni)
     {
         _logger = logger;
         _connectors[SnesConnectorType.Usb2Snes] = usb2SnesConnector;
-        _connectors[SnesConnectorType.Lua] = luaConnector;
+        _connectors[SnesConnectorType.Lua] = luaConnectorDefault;
+        _connectors[SnesConnectorType.LuaEmoTracker] = luaConnectorEmoTracker;
+        _connectors[SnesConnectorType.LuaCrowdControl] = luaConnectorCrowdControl;
+        _connectors[SnesConnectorType.LuaSni] = luaConnectorSni;
     }
     
     public event EventHandler? OnConnected;
@@ -43,7 +46,6 @@ public class SnesConnectorService
                     var request = _scheduledRequests.Where(x => x.ShouldRun).MinBy(x => x.NextRunTime);
                     if (request != null)
                     {
-                        _logger.LogInformation("Current: {Time} | Next run time: {Time2}", DateTime.Now, request.NextRunTime);
                         ProcessRequest(request);
                     }
                 }

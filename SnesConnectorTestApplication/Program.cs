@@ -28,15 +28,17 @@ public static class Program
         {
             RequestType = SnesMemoryRequestType.GetAddress, 
             SnesMemoryDomain = SnesMemoryDomain.WRAM,
-            Address = 0x7e09C2, 
+            Address = 0x7e09C2,
             Length = 16,
             FrequencySeconds = 1,
             OnResponse = data =>
             {
-                Log.Information("Response: {Data} {Data2}", data.ReadUInt16(0x7e09C2), data.Raw[0]);
+                Log.Information("Response: {Data}", data.ReadUInt16(0x7e09C2));
 
                 if (data.ReadUInt16(0x7e09C2) != 321)
                 {
+                    Log.Information("Updating memory");
+                    
                     snesConnectorService.MakeRequest(new SnesMemoryRequest()
                     {
                         RequestType = SnesMemoryRequestType.PutAddress,
@@ -49,7 +51,7 @@ public static class Program
             Filter = () =>
             {
                 var datetime = DateTime.Now.Second;
-                return datetime % 3 == 0;
+                return datetime % 4 == 0;
             }
         });
         

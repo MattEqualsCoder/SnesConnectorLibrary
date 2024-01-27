@@ -9,7 +9,10 @@ public static class SnesConnectorServiceCollectionExtensions
     {
         services.AddSingleton<SnesConnectorService>()
             .AddSingleton<Usb2SnesConnector>()
-            .AddSingleton<LuaConnector>();
+            .AddSingleton<LuaConnectorDefault>()
+            .AddSingleton<LuaConnectorEmoTracker>()
+            .AddSingleton<LuaConnectorCrowdControl>()
+            .AddSingleton<LuaConnectorSni>();
 
         return services;
     }
