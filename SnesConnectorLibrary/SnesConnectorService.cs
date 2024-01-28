@@ -11,7 +11,7 @@ public class SnesConnectorService
     private List<SnesMemoryRequest> _queue = new();
     private List<SnesScheduledMemoryRequest> _scheduledRequests = new();
 
-    public SnesConnectorService(ILogger<SnesConnectorService> logger, Usb2SnesConnector usb2SnesConnector, LuaConnectorDefault luaConnectorDefault, LuaConnectorEmoTracker luaConnectorEmoTracker, LuaConnectorCrowdControl luaConnectorCrowdControl, LuaConnectorSni luaConnectorSni)
+    public SnesConnectorService(ILogger<SnesConnectorService> logger, Usb2SnesConnector usb2SnesConnector, LuaConnectorDefault luaConnectorDefault, LuaConnectorEmoTracker luaConnectorEmoTracker, LuaConnectorCrowdControl luaConnectorCrowdControl, LuaConnectorSni luaConnectorSni, SniConnector sniConnector)
     {
         _logger = logger;
         _connectors[SnesConnectorType.Usb2Snes] = usb2SnesConnector;
@@ -19,6 +19,7 @@ public class SnesConnectorService
         _connectors[SnesConnectorType.LuaEmoTracker] = luaConnectorEmoTracker;
         _connectors[SnesConnectorType.LuaCrowdControl] = luaConnectorCrowdControl;
         _connectors[SnesConnectorType.LuaSni] = luaConnectorSni;
+        _connectors[SnesConnectorType.Sni] = sniConnector;
     }
     
     public event EventHandler? OnConnected;

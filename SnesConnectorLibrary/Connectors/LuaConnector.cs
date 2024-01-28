@@ -176,11 +176,11 @@ public abstract class LuaConnector : ISnesConnector
     {
         switch (domain)
         {
-            case SnesMemoryDomain.WRAM:
+            case SnesMemoryDomain.Memory:
                 return "WRAM";
-            case SnesMemoryDomain.CartRAM:
+            case SnesMemoryDomain.SaveRam:
                 return "CARTRAM";
-            case SnesMemoryDomain.CartROM:
+            case SnesMemoryDomain.Rom:
                 return "CARTROM";
             default:
                 return "";
@@ -228,11 +228,11 @@ public abstract class LuaConnector : ISnesConnector
             return message.Address;
         }
         
-        if (message.SnesMemoryDomain == SnesMemoryDomain.CartROM)
+        if (message.SnesMemoryDomain == SnesMemoryDomain.Rom)
         {
             return message.Address;
         }
-        else if (message.SnesMemoryDomain == SnesMemoryDomain.CartRAM)
+        else if (message.SnesMemoryDomain == SnesMemoryDomain.SaveRam)
         {
             var offset = 0x0;
             var remaining = message.Address - 0xa06000;
@@ -243,7 +243,7 @@ public abstract class LuaConnector : ISnesConnector
             }
             return offset + remaining;
         }
-        else if (message.SnesMemoryDomain == SnesMemoryDomain.WRAM)
+        else if (message.SnesMemoryDomain == SnesMemoryDomain.Memory)
         {
             return message.Address - 0x7e0000;
         }

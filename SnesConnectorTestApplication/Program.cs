@@ -1,6 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Grpc.Net.Client;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using SnesConnectorLibrary;
+using SNI;
+
+namespace SnesConnectorTestApplication;
 
 public static class Program
 {
@@ -23,11 +27,11 @@ public static class Program
             .BuildServiceProvider();
 
         var snesConnectorService = s_services.GetRequiredService<SnesConnectorService>();
-        snesConnectorService.Connect(SnesConnectorType.Lua);
+        snesConnectorService.Connect(SnesConnectorType.Sni);
         snesConnectorService.AddScheduledRequest(new SnesScheduledMemoryRequest()
         {
             RequestType = SnesMemoryRequestType.GetAddress, 
-            SnesMemoryDomain = SnesMemoryDomain.WRAM,
+            SnesMemoryDomain = SnesMemoryDomain.Memory,
             Address = 0x7e09C2,
             Length = 16,
             FrequencySeconds = 1,
@@ -42,7 +46,7 @@ public static class Program
                     snesConnectorService.MakeRequest(new SnesMemoryRequest()
                     {
                         RequestType = SnesMemoryRequestType.PutAddress,
-                        SnesMemoryDomain = SnesMemoryDomain.WRAM,
+                        SnesMemoryDomain = SnesMemoryDomain.Memory,
                         Address = 0x7E09C2,
                         Data = BitConverter.GetBytes((short)321).ToList()
                     });

@@ -268,17 +268,17 @@ public class Usb2SnesConnector : ISnesConnector
             RequestType = SnesMemoryRequestType.GetAddress,
             Address = 0x7e0020,
             Length = 1,
-            SnesMemoryDomain = SnesMemoryDomain.WRAM
+            SnesMemoryDomain = SnesMemoryDomain.Memory
         });
     }
 
     private int TranslateAddress(SnesMemoryRequest message)
     {
-        if (message.SnesMemoryDomain == SnesMemoryDomain.CartROM)
+        if (message.SnesMemoryDomain == SnesMemoryDomain.Rom)
         {
             return message.Address;
         }
-        else if (message.SnesMemoryDomain == SnesMemoryDomain.CartRAM)
+        else if (message.SnesMemoryDomain == SnesMemoryDomain.SaveRam)
         {
             var offset = 0x0;
             var remaining = message.Address - 0xa06000;
@@ -289,7 +289,7 @@ public class Usb2SnesConnector : ISnesConnector
             }
             return 0xE00000 + offset + remaining;
         }
-        else if (message.SnesMemoryDomain == SnesMemoryDomain.WRAM)
+        else if (message.SnesMemoryDomain == SnesMemoryDomain.Memory)
         {
             return message.Address + 0x770000;
         }
