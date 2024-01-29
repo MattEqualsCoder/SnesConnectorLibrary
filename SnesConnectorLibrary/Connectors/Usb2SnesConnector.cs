@@ -97,6 +97,9 @@ public class Usb2SnesConnector : ISnesConnector
         }
     }
 
+    private int _currentByteCount = 0;
+    private List<byte> _bytes = new List<byte>();
+
     private void OnClientMessage(ResponseMessage msg)
     {
         if (msg.MessageType == WebSocketMessageType.Text)
@@ -116,22 +119,28 @@ public class Usb2SnesConnector : ISnesConnector
         }
         else if (msg is { MessageType: WebSocketMessageType.Binary, Binary: not null })
         {
-            var request = _pendingRequest!;
-            _pendingRequest = null;
+            _currentByteCount = _currentByteCount + msg.Binary.Length;
+            _bytes.AddRange(msg.Binary);
 
-            if (!_hasReceivedMessage)
+            if (_currentByteCount >= _pendingRequest.Length)
             {
-                IsConnected = true;
-                OnConnected?.Invoke(this, EventArgs.Empty);
-                _hasReceivedMessage = true;
-            }
-            else
-            {
-                OnMessage?.Invoke(this, new SnesDataReceivedEventArgs()
+                var request = _pendingRequest!;
+                _pendingRequest = null;
+
+                if (!_hasReceivedMessage)
                 {
-                    Request = request,
-                    Data = new SnesData(request.Address, msg.Binary)
-                });
+                    IsConnected = true;
+                    OnConnected?.Invoke(this, EventArgs.Empty);
+                    _hasReceivedMessage = true;
+                }
+                else
+                {
+                    OnMessage?.Invoke(this, new SnesDataReceivedEventArgs()
+                    {
+                        Request = request,
+                        Data = new SnesData(request.Address, _bytes.ToArray())
+                    });
+                }
             }
         }
         else
@@ -150,6 +159,8 @@ public class Usb2SnesConnector : ISnesConnector
         _pendingRequest = request;
         var address = TranslateAddress(request).ToString("X");
         var length = request.Length.ToString("X");
+        _currentByteCount = 0;
+        _bytes.Clear();
 
         _logger.LogInformation("Sending request for memory location {Address} of {Length}", address, length);
         _client.Send(JsonSerializer.Serialize(new Usb2SnesRequest()
@@ -189,6 +200,8 @@ public class Usb2SnesConnector : ISnesConnector
         await Task.Delay(TimeSpan.FromMilliseconds(50));
         
         _client.Send(request.Data.ToArray());
+
+        _pendingRequest = null;
     }
 
     private async Task AttachToDevice(string message)
