@@ -7,7 +7,7 @@ public static class SnesConnectorServiceCollectionExtensions
 {
     public static IServiceCollection AddSnesConnectorServices(this IServiceCollection services)
     {
-        services.AddSingleton<SnesConnectorService>()
+        services.AddSingleton<ISnesConnectorService, SnesConnectorService>()
             .AddSingleton<Usb2SnesConnector>()
             .AddSingleton<LuaConnectorDefault>()
             .AddSingleton<LuaConnectorEmoTracker>()

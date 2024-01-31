@@ -3,13 +3,13 @@ using SnesConnectorLibrary.Connectors;
 
 namespace SnesConnectorLibrary;
 
-public class SnesConnectorService
+internal class SnesConnectorService : ISnesConnectorService
 {
     private readonly ILogger<SnesConnectorService> _logger;
     private readonly Dictionary<SnesConnectorType, ISnesConnector> _connectors = new();
+    private readonly List<SnesMemoryRequest> _queue = new();
+    private readonly List<SnesRecurringMemoryRequest> _recurringRequests = new();
     private ISnesConnector? _currentConnector;
-    private List<SnesMemoryRequest> _queue = new();
-    private List<SnesScheduledMemoryRequest> _scheduledRequests = new();
 
     public SnesConnectorService(ILogger<SnesConnectorService> logger, Usb2SnesConnector usb2SnesConnector, LuaConnectorDefault luaConnectorDefault, LuaConnectorEmoTracker luaConnectorEmoTracker, LuaConnectorCrowdControl luaConnectorCrowdControl, LuaConnectorSni luaConnectorSni, SniConnector sniConnector)
     {
@@ -30,31 +30,6 @@ public class SnesConnectorService
 
     public bool IsConnected => _currentConnector?.IsConnected == true;
 
-    public async Task ProcessRequests()
-    {
-        while (IsConnected)
-        {
-            if (_currentConnector?.CanMakeRequest == true)
-            {
-                if (_queue.Any())
-                {
-                    var request = _queue.First();
-                    ProcessRequest(request);
-                    _queue.Remove(request);
-                }
-                else if (_scheduledRequests.Any())
-                {
-                    var request = _scheduledRequests.Where(x => x.ShouldRun).MinBy(x => x.NextRunTime);
-                    if (request != null)
-                    {
-                        ProcessRequest(request);
-                    }
-                }
-            }
-            await Task.Delay(TimeSpan.FromMilliseconds(50));
-        }
-    }
-    
     public void Connect(SnesConnectorType type)
     {
         Connect(new SnesConnectorSettings() { ConnectorType = type });
@@ -68,14 +43,50 @@ public class SnesConnectorService
         _currentConnector.OnConnected += CurrentConnectorOnConnected;
         _currentConnector.OnDisconnected += CurrentConnectorOnDisconnected;
         _currentConnector.OnMessage += CurrentConnectorOnMessage;
-        _currentConnector.Connect(settings);
+        _currentConnector.Enable(settings);
+    }
+    
+    public void Disconnect()
+    {
+        if (_currentConnector == null)
+        {
+            return;
+        }
+        
+        _currentConnector.Disable();
+        _currentConnector.OnConnected -= CurrentConnectorOnConnected;
+        _currentConnector.OnDisconnected -= CurrentConnectorOnDisconnected;
+        _currentConnector.OnMessage -= CurrentConnectorOnMessage;
+        _currentConnector = null;
+    }
+    
+    public void Dispose()
+    {
+        Disconnect();
+        _currentConnector?.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    public void MakeRequest(SnesMemoryRequest request)
+    {
+        if (_currentConnector?.IsConnected != true)
+        {
+            _logger.LogWarning("No connected connector");
+        }
+
+        _queue.Add(request);
+    }
+    
+    public void AddRecurringRequest(SnesRecurringMemoryRequest request)
+    {
+        _recurringRequests.Add(request);
     }
 
     private void CurrentConnectorOnMessage(object sender, SnesDataReceivedEventArgs e)
     {
-        if (e.Request is SnesScheduledMemoryRequest scheduledRequest)
+        if (e.Request is SnesRecurringMemoryRequest recurringRequest)
         {
-            scheduledRequest.LastRunTime = DateTime.Now;
+            recurringRequest.LastRunTime = DateTime.Now;
         }
         e.Request.OnResponse?.Invoke(e.Data);
         OnMessage?.Invoke(sender, e);
@@ -91,32 +102,33 @@ public class SnesConnectorService
         _ = ProcessRequests();
         OnConnected?.Invoke(sender, e);
     }
-
-    public void Disconnect()
-    {
-        if (_currentConnector == null)
-        {
-            return;
-        }
-        
-        _currentConnector.Disconnect();
-        _currentConnector.OnConnected -= CurrentConnectorOnConnected;
-        _currentConnector.OnDisconnected -= CurrentConnectorOnDisconnected;
-        _currentConnector.OnMessage -= CurrentConnectorOnMessage;
-        _currentConnector = null;
-    }
-
-    public void MakeRequest(SnesMemoryRequest request)
-    {
-        if (_currentConnector?.IsConnected != true)
-        {
-            _logger.LogWarning("No connected connector");
-        }
-
-        _queue.Add(request);
-    }
     
-    private void ProcessRequest(SnesMemoryRequest request)
+    private async Task ProcessRequests()
+    {
+        while (IsConnected)
+        {
+            if (_currentConnector?.CanMakeRequest == true)
+            {
+                if (_queue.Any())
+                {
+                    var request = _queue.First();
+                    await ProcessRequest(request);
+                    _queue.Remove(request);
+                }
+                else if (_recurringRequests.Any())
+                {
+                    var request = _recurringRequests.Where(x => x.CanRun).MinBy(x => x.NextRunTime);
+                    if (request != null)
+                    {
+                        await ProcessRequest(request);
+                    }
+                }
+            }
+            await Task.Delay(TimeSpan.FromMilliseconds(50));
+        }
+    }
+
+    private async Task ProcessRequest(SnesMemoryRequest request)
     {
         if (!IsConnected)
         {
@@ -124,21 +136,14 @@ public class SnesConnectorService
             return;
         }
         
-        if (request.RequestType == SnesMemoryRequestType.GetAddress)
+        if (request.RequestType == SnesMemoryRequestType.Retrieve)
         {
-            _currentConnector!.GetAddress(request);
+            await _currentConnector!.GetAddress(request);
         }
-        else if (request.RequestType == SnesMemoryRequestType.PutAddress)
+        else if (request.RequestType == SnesMemoryRequestType.Update)
         {
-            _currentConnector!.PutAddress(request);
+            await _currentConnector!.PutAddress(request);
         }
 
     }
-
-    public void AddScheduledRequest(SnesScheduledMemoryRequest request)
-    {
-        _scheduledRequests.Add(request);
-    }
-    
-    
 }

@@ -2,7 +2,7 @@
 
 namespace SnesConnectorLibrary.Connectors;
 
-public class LuaConnectorCrowdControl : LuaConnectorEmoTracker
+internal class LuaConnectorCrowdControl : LuaConnectorEmoTracker
 {
     public LuaConnectorCrowdControl(ILogger<LuaConnector> logger) : base(logger)
     {

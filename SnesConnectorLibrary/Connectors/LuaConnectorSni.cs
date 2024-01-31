@@ -6,19 +6,25 @@ using Microsoft.Extensions.Logging;
 
 namespace SnesConnectorLibrary.Connectors;
 
-public class LuaConnectorSni : LuaConnector
+internal class LuaConnectorSni : LuaConnector
 {
     public LuaConnectorSni(ILogger<LuaConnector> logger) : base(logger)
     {
     }
     
-    public override void GetAddress(SnesMemoryRequest request)
+    public override async Task GetAddress(SnesMemoryRequest request)
     {
+        if (Socket?.Connected != true)
+        {
+            Logger.LogWarning("Socket is not connected");
+            return;
+        }
+        
         var msgString = $"Read|{TranslateAddress(request)}|{request.Length}|{GetDomainString(request.SnesMemoryDomain)}\n\0";
         try
         {
             CurrentRequest = request;
-            Socket?.Send(Encoding.ASCII.GetBytes(msgString));
+            await Socket.SendAsync(Encoding.ASCII.GetBytes(msgString));
         }
         catch (SocketException ex)
         {

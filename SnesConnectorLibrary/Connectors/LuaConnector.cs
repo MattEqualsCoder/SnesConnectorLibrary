@@ -4,31 +4,26 @@ using Microsoft.Extensions.Logging;
 
 namespace SnesConnectorLibrary.Connectors;
 
-public abstract class LuaConnector : ISnesConnector
+internal abstract class LuaConnector : ISnesConnector
 {
     protected readonly ILogger<LuaConnector> Logger;
-    private TcpListener? _tcpListener;
     protected bool IsEnabled;
     protected bool IsBizHawk;
     protected Socket? Socket;
     protected SnesMemoryRequest? CurrentRequest;
+    private TcpListener? _tcpListener;
     private DateTime? _lastMessageTime;
 
-    public LuaConnector(ILogger<LuaConnector> logger)
+    protected LuaConnector(ILogger<LuaConnector> logger)
     {
         Logger = logger;
     }
     
-    public void Dispose()
-    {
-        // TODO release managed resources here
-    }
-
     public event EventHandler? OnConnected;
     public event EventHandler? OnDisconnected;
     public event SnesDataReceivedEventHandler? OnMessage;
     
-    public void Connect(SnesConnectorSettings settings)
+    public void Enable(SnesConnectorSettings settings)
     {
         if (IsConnected)
         {
@@ -41,28 +36,35 @@ public abstract class LuaConnector : ISnesConnector
         _ = MonitorSocket();
     }
 
-    public void Disconnect()
+    public void Disable()
     {
-        MarkAsDisconnected();
-        
-        if (Socket?.Connected == true)
-        {
-            Socket?.Disconnect(true);    
-        }
-
-        _tcpListener?.Stop();
-
         IsEnabled = false;
-
+        MarkAsDisconnected();
+        _tcpListener?.Stop();
     }
-
-    public bool IsConnected { get; private set; }
-
-    public abstract void GetAddress(SnesMemoryRequest request);
+    
+    public void Dispose()
+    {
+        IsConnected = false;
+        Disable();
+        GC.SuppressFinalize(this);
+    }
+    
+    public abstract Task GetAddress(SnesMemoryRequest request);
 
     public abstract Task PutAddress(SnesMemoryRequest request);
 
+    public bool IsConnected { get; private set; }
+    
     public bool CanMakeRequest => IsConnected && CurrentRequest == null && Socket?.Connected == true;
+
+    protected abstract int GetDefaultPort();
+    
+    protected abstract Task SendInitialMessage();
+    
+    protected abstract void ProcessLine(string line, SnesMemoryRequest? request);
+
+    protected abstract Task<string?> ReadNextLine(StreamReader reader);
 
     protected void MarkConnected()
     {
@@ -73,7 +75,81 @@ public abstract class LuaConnector : ISnesConnector
         OnConnected?.Invoke(this, EventArgs.Empty);
     }
 
-    protected abstract int GetDefaultPort();
+    protected void ProcessRequestBytes(SnesMemoryRequest request, byte[] data)
+    {
+        OnMessage?.Invoke(this, new SnesDataReceivedEventArgs()
+        {
+            Request = request,
+            Data = new SnesData(request.Address, data)
+        });
+    }
+
+    protected string GetDomainString(SnesMemoryDomain domain)
+    {
+        switch (domain)
+        {
+            case SnesMemoryDomain.Memory:
+                return "WRAM";
+            case SnesMemoryDomain.SaveRam:
+                return "CARTRAM";
+            case SnesMemoryDomain.Rom:
+                return "CARTROM";
+            default:
+                return "";
+        }
+    }
+    
+    protected static byte[] HexStringToByteArray(string hex) {
+        return Enumerable.Range(0, hex.Length)
+            .Where(x => x % 2 == 0)
+            .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+            .ToArray();
+    }
+    
+    protected void MarkAsDisconnected()
+    {
+        if (Socket?.Connected == true)
+        {
+            Socket?.Disconnect(true);    
+        }
+        
+        if (IsConnected)
+        {
+            IsConnected = false;
+            CurrentRequest = null;
+            _lastMessageTime = null;
+            OnDisconnected?.Invoke(this, EventArgs.Empty);
+        }
+    }
+    
+    protected int TranslateAddress(SnesMemoryRequest message)
+    {
+        if (!IsBizHawk)
+        {
+            return message.Address;
+        }
+        
+        if (message.SnesMemoryDomain == SnesMemoryDomain.Rom)
+        {
+            return message.Address;
+        }
+        else if (message.SnesMemoryDomain == SnesMemoryDomain.SaveRam)
+        {
+            var offset = 0x0;
+            var remaining = message.Address - 0xa06000;
+            while (remaining >= 0x2000)
+            {
+                remaining -= 0x10000;
+                offset += 0x2000;
+            }
+            return offset + remaining;
+        }
+        else if (message.SnesMemoryDomain == SnesMemoryDomain.Memory)
+        {
+            return message.Address - 0x7e0000;
+        }
+        return message.Address;
+    }
 
     private void GetAddressAndPort(SnesConnectorSettings settings, out IPAddress address, out int port)
     {
@@ -105,21 +181,6 @@ public abstract class LuaConnector : ISnesConnector
         }
     }
 
-    protected abstract Task SendInitialMessage();
-
-    protected void ProcessRequestBytes(SnesMemoryRequest request, byte[] data)
-    {
-        OnMessage?.Invoke(this, new SnesDataReceivedEventArgs()
-        {
-            Request = request,
-            Data = new SnesData(request.Address, data)
-        });
-    }
-
-    protected abstract void ProcessLine(string line, SnesMemoryRequest? request);
-
-    protected abstract Task<string?> ReadNextLine(StreamReader reader);
-    
     private async Task StartSocketServer(SnesConnectorSettings settings)
     {
         GetAddressAndPort(settings, out var address, out var port);
@@ -169,31 +230,10 @@ public abstract class LuaConnector : ISnesConnector
                     Logger.LogWarning(e, "Error with socket connection");
                 }
             }
+            
+            await Task.Delay(TimeSpan.FromSeconds(3));
         }
     }
-    
-    protected string GetDomainString(SnesMemoryDomain domain)
-    {
-        switch (domain)
-        {
-            case SnesMemoryDomain.Memory:
-                return "WRAM";
-            case SnesMemoryDomain.SaveRam:
-                return "CARTRAM";
-            case SnesMemoryDomain.Rom:
-                return "CARTROM";
-            default:
-                return "";
-        }
-    }
-    
-    protected static byte[] HexStringToByteArray(string hex) {
-        return Enumerable.Range(0, hex.Length)
-            .Where(x => x % 2 == 0)
-            .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
-            .ToArray();
-    }
-
     
     private async Task MonitorSocket()
     {
@@ -208,45 +248,5 @@ public abstract class LuaConnector : ISnesConnector
 
             await Task.Delay(TimeSpan.FromSeconds(1));
         }
-    }
-
-    protected void MarkAsDisconnected()
-    {
-        if (IsConnected)
-        {
-            IsConnected = false;
-            CurrentRequest = null;
-            _lastMessageTime = null;
-            OnDisconnected?.Invoke(this, EventArgs.Empty);
-        }
-    }
-    
-    protected int TranslateAddress(SnesMemoryRequest message)
-    {
-        if (!IsBizHawk)
-        {
-            return message.Address;
-        }
-        
-        if (message.SnesMemoryDomain == SnesMemoryDomain.Rom)
-        {
-            return message.Address;
-        }
-        else if (message.SnesMemoryDomain == SnesMemoryDomain.SaveRam)
-        {
-            var offset = 0x0;
-            var remaining = message.Address - 0xa06000;
-            while (remaining >= 0x2000)
-            {
-                remaining -= 0x10000;
-                offset += 0x2000;
-            }
-            return offset + remaining;
-        }
-        else if (message.SnesMemoryDomain == SnesMemoryDomain.Memory)
-        {
-            return message.Address - 0x7e0000;
-        }
-        return message.Address;
     }
 }

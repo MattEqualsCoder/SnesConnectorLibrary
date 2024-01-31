@@ -3,7 +3,7 @@
 -- version 3 changes Read response from JSON to HEX
 -- lua 5.1/5.4 shim by zig; modifications licensed under MIT and WTFPL
 -- version 4 enhances the message processing loop to allow for more than one message per game frame
--- Previous changes were merged into a previous autotracking lua script by MattEqualsCoder
+-- Above changes were merged into a previous autotracking lua script by MattEqualsCoder
 
 local emulator = loadfile('emulator.lua')()
 

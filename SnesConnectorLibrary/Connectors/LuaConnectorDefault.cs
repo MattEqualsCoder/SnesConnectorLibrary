@@ -1,20 +1,21 @@
-﻿using System.Net.Sockets;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
 namespace SnesConnectorLibrary.Connectors;
 
-public class LuaConnectorDefault : LuaConnector
+internal class LuaConnectorDefault : LuaConnector
 {
     public LuaConnectorDefault(ILogger<LuaConnector> logger) : base(logger)
     {
     }
 
-    public override void GetAddress(SnesMemoryRequest request)
+    public override async Task GetAddress(SnesMemoryRequest request)
     {
         CurrentRequest = request;
-        _ = SendRequest(new LuaRequest()
+        await SendRequest(new LuaRequest()
         {
             Action = "read_block",
             Domain = GetDomainString(request.SnesMemoryDomain),
@@ -95,6 +96,7 @@ public class LuaConnectorDefault : LuaConnector
         }
     }
 
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
     class LuaRequest
     {
         public string Action { get; set; } = "";

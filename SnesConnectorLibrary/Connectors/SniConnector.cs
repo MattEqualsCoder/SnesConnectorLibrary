@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices;
-using System.Xml;
 using Google.Protobuf;
 using Grpc.Core;
 using Grpc.Net.Client;
@@ -8,9 +6,9 @@ using SNI;
 
 namespace SnesConnectorLibrary.Connectors;
 
-public class SniConnector : ISnesConnector
+internal class SniConnector : ISnesConnector
 {
-    private ILogger<SniConnector> _logger;
+    private readonly ILogger<SniConnector> _logger;
     private string? _address;
     private Devices.DevicesClient? _devices;
     private DeviceMemory.DeviceMemoryClient? _memory;
@@ -25,25 +23,19 @@ public class SniConnector : ISnesConnector
         _logger = logger;
     }
     
-    public void Dispose()
-    {
-        _channel?.Dispose();
-        _isEnabled = false;
-    }
-
     public event EventHandler? OnConnected;
     public event EventHandler? OnDisconnected;
     public event SnesDataReceivedEventHandler? OnMessage;
     
-    public void Connect(SnesConnectorSettings settings)
+    public void Enable(SnesConnectorSettings settings)
     {
         if (IsConnected)
         {
-            Disconnect();    
+            Disable();    
         }
 
         _isEnabled = true;
-        var address = string.IsNullOrEmpty(settings.Usb2SnesAddress) ? "http://localhost:8191" : settings.Usb2SnesAddress;
+        var address = string.IsNullOrEmpty(settings.SniAddress) ? "http://localhost:8191" : settings.SniAddress;
         if (!address.Contains(':'))
         {
             address += ":8191";
@@ -63,22 +55,35 @@ public class SniConnector : ISnesConnector
         _ = GetDevices();
     }
     
-    public void Disconnect()
+    public void Disable()
     {
-        _isEnabled = false;
         _channel?.Dispose();
-        _ = MarkAsDisconnected();
+        if (_isEnabled)
+        {
+            _isEnabled = false;
+            _ = MarkAsDisconnected();
+        }
     }
-
-    public bool IsConnected { get; private set; }
     
-    public void GetAddress(SnesMemoryRequest request)
+    public void Dispose()
     {
+        Disable();
+        GC.SuppressFinalize(this);
+    }
+    
+    public async Task GetAddress(SnesMemoryRequest request)
+    {
+        if (_memory == null)
+        {
+            _logger.LogWarning("Attempted to make GetAddress call when not connected");
+            return;
+        }
+        
         _pendingRequest = request;
         _logger.LogInformation("Making request to device {Device}", _deviceAddress);
         try
         {
-            var response = _memory.SingleRead(new SingleReadMemoryRequest()
+            var response = await _memory.SingleReadAsync(new SingleReadMemoryRequest()
             {
                 Uri = _deviceAddress,
                 Request = new ReadMemoryRequest()
@@ -89,10 +94,11 @@ public class SniConnector : ISnesConnector
                     Size = (uint)request.Length
                 }
             }, new CallOptions(deadline: DateTime.UtcNow.AddSeconds(3)));
+            
             var bytes = response.Response.Data.ToArray();
             _pendingRequest = null;
             _lastMessageTime = DateTime.Now;
-            ;
+            
             OnMessage?.Invoke(this, new SnesDataReceivedEventArgs()
             {
                 Request = request,
@@ -116,7 +122,7 @@ public class SniConnector : ISnesConnector
 
         try
         {
-            var response = await _memory.SingleWriteAsync(new SingleWriteMemoryRequest()
+            await _memory.SingleWriteAsync(new SingleWriteMemoryRequest()
             {
                 Uri = _deviceAddress,
                 Request = new WriteMemoryRequest()
@@ -136,6 +142,8 @@ public class SniConnector : ISnesConnector
         
     }
 
+    public bool IsConnected { get; private set; }
+    
     public bool CanMakeRequest => IsConnected && !string.IsNullOrEmpty(_deviceAddress) && _pendingRequest == null;
 
     private async Task GetDevices()
@@ -165,7 +173,7 @@ public class SniConnector : ISnesConnector
                     break;
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // Do nothing as SNI is probably not running
             }

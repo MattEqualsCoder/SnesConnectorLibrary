@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net.WebSockets;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
@@ -5,7 +6,7 @@ using Websocket.Client;
 
 namespace SnesConnectorLibrary.Connectors;
 
-public class Usb2SnesConnector : ISnesConnector
+internal class Usb2SnesConnector : ISnesConnector
 {
     private readonly ILogger<Usb2SnesConnector> _logger;
     private WebsocketClient? _client;
@@ -13,27 +14,24 @@ public class Usb2SnesConnector : ISnesConnector
     private string _clientName = "SnesConnectorLibrary";
     private SnesMemoryRequest? _pendingRequest;
     private ConnectionStep _connectionStep = ConnectionStep.DeviceList;
+    private readonly List<byte> _bytes = new();
 
     public Usb2SnesConnector(ILogger<Usb2SnesConnector> logger)
     {
         _logger = logger;
     }
 
-    public bool IsConnected { get; private set; }
-
-    public bool CanMakeRequest => IsConnected && _pendingRequest == null;
-
     public event EventHandler? OnConnected;
     public event EventHandler? OnDisconnected;
     public event SnesDataReceivedEventHandler? OnMessage;
     
-    public void Connect(SnesConnectorSettings settings)
+    public void Enable(SnesConnectorSettings settings)
     {
         _clientName = settings.ClientName;
         
         if (IsConnected)
         {
-            Disconnect();    
+            Disable();    
         }
 
         var address = string.IsNullOrEmpty(settings.Usb2SnesAddress) ? "localhost:8080" : settings.Usb2SnesAddress;
@@ -59,7 +57,7 @@ public class Usb2SnesConnector : ISnesConnector
         _client.Start();
     }
     
-    public void Disconnect()
+    public void Disable()
     {
         _client?.Dispose();
         _client = null;
@@ -68,10 +66,13 @@ public class Usb2SnesConnector : ISnesConnector
 
     public void Dispose()
     {
-        _client?.Dispose();
-        _client = null;
-        IsConnected = false;
+        Disable();
+        GC.SuppressFinalize(this);
     }
+    
+    public bool IsConnected { get; private set; }
+
+    public bool CanMakeRequest => IsConnected && _pendingRequest == null;
 
     private void OnClientConnected(ReconnectionInfo info)
     {
@@ -97,9 +98,6 @@ public class Usb2SnesConnector : ISnesConnector
         }
     }
 
-    private int _currentByteCount = 0;
-    private List<byte> _bytes = new List<byte>();
-
     private void OnClientMessage(ResponseMessage msg)
     {
         if (msg.MessageType == WebSocketMessageType.Text)
@@ -119,10 +117,9 @@ public class Usb2SnesConnector : ISnesConnector
         }
         else if (msg is { MessageType: WebSocketMessageType.Binary, Binary: not null })
         {
-            _currentByteCount = _currentByteCount + msg.Binary.Length;
             _bytes.AddRange(msg.Binary);
 
-            if (_currentByteCount >= _pendingRequest.Length)
+            if (_bytes.Count >= _pendingRequest?.Length)
             {
                 var request = _pendingRequest!;
                 _pendingRequest = null;
@@ -149,7 +146,7 @@ public class Usb2SnesConnector : ISnesConnector
         }
     }
 
-    public void GetAddress(SnesMemoryRequest request)
+    public async Task GetAddress(SnesMemoryRequest request)
     {
         if (_client == null)
         {
@@ -159,11 +156,10 @@ public class Usb2SnesConnector : ISnesConnector
         _pendingRequest = request;
         var address = TranslateAddress(request).ToString("X");
         var length = request.Length.ToString("X");
-        _currentByteCount = 0;
         _bytes.Clear();
 
         _logger.LogInformation("Sending request for memory location {Address} of {Length}", address, length);
-        _client.Send(JsonSerializer.Serialize(new Usb2SnesRequest()
+        await _client.SendInstant(JsonSerializer.Serialize(new Usb2SnesRequest()
         {
             Opcode = "GetAddress",
             Space = "SNES",
@@ -190,7 +186,7 @@ public class Usb2SnesConnector : ISnesConnector
         
         _logger.LogInformation("PutAddress Send");
         
-        _client.Send(JsonSerializer.Serialize(new Usb2SnesRequest()
+        await _client.SendInstant(JsonSerializer.Serialize(new Usb2SnesRequest()
         {
             Opcode = "PutAddress",
             Space = "SNES",
@@ -199,7 +195,7 @@ public class Usb2SnesConnector : ISnesConnector
         
         await Task.Delay(TimeSpan.FromMilliseconds(50));
         
-        _client.Send(request.Data.ToArray());
+        await _client.SendInstant(request.Data.ToArray());
 
         _pendingRequest = null;
     }
@@ -251,7 +247,6 @@ public class Usb2SnesConnector : ISnesConnector
 
     private async Task ParseDeviceInfo(string message)
     {
-        
         _logger.LogInformation("usb2snes info: {Message}", message);
         
         var response = JsonSerializer.Deserialize<Usb2SnesDeviceListResponse>(message);
@@ -276,9 +271,9 @@ public class Usb2SnesConnector : ISnesConnector
         await Task.Delay(TimeSpan.FromMilliseconds(3000));
         
         _logger.LogInformation("usb2snes rom: {Message}", rom);
-        GetAddress(new SnesMemoryRequest()
+        await GetAddress(new SnesMemoryRequest()
         {
-            RequestType = SnesMemoryRequestType.GetAddress,
+            RequestType = SnesMemoryRequestType.Retrieve,
             Address = 0x7e0020,
             Length = 1,
             SnesMemoryDomain = SnesMemoryDomain.Memory
@@ -313,5 +308,27 @@ public class Usb2SnesConnector : ISnesConnector
     {
         DeviceList,
         Info
+    }
+    
+    class Usb2SnesDeviceListResponse
+    {
+        public List<string>? Results { get; set; }
+    }
+    
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
+    class Usb2SnesRequest
+    {
+        /// <summary>
+        /// The type of request being sent to USB2SNES
+        /// </summary>
+        public string? Opcode { get; set; }
+        /// <summary>
+        /// Where to get the data from in USB2SNES (always should be SNES probably?)
+        /// </summary>
+        public string? Space { get; set; }
+        /// <summary>
+        /// Parameters for the request
+        /// </summary>
+        public ICollection<string>? Operands { get; set; }
     }
 }

@@ -26,20 +26,20 @@ public static class Program
             .AddSnesConnectorServices()
             .BuildServiceProvider();
 
-        var snesConnectorService = s_services.GetRequiredService<SnesConnectorService>();
+        var snesConnectorService = s_services.GetRequiredService<ISnesConnectorService>();
         snesConnectorService.Connect(SnesConnectorType.Sni);
-        snesConnectorService.AddScheduledRequest(new SnesScheduledMemoryRequest()
+        snesConnectorService.AddRecurringRequest(new SnesRecurringMemoryRequest()
         {
-            RequestType = SnesMemoryRequestType.GetAddress, 
+            RequestType = SnesMemoryRequestType.Retrieve, 
             SnesMemoryDomain = SnesMemoryDomain.Memory,
             Address = 0x7e09C2,
-            Length = 16,
+            Length = 0x400,
             FrequencySeconds = 1,
             OnResponse = data =>
             {
                 Log.Information("Response: {Data}", data.ReadUInt16(0x7e09C2));
 
-                if (data.ReadUInt16(0x7e09C2) != 321)
+                /*if (data.ReadUInt16(0x7e09C2) != 321)
                 {
                     Log.Information("Updating memory");
                     
@@ -50,7 +50,7 @@ public static class Program
                         Address = 0x7E09C2,
                         Data = BitConverter.GetBytes((short)321).ToList()
                     });
-                }
+                }*/
             },
             Filter = () =>
             {

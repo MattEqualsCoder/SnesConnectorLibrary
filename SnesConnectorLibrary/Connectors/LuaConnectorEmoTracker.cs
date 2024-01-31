@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -6,53 +7,16 @@ using Microsoft.Extensions.Logging;
 
 namespace SnesConnectorLibrary.Connectors;
 
-public class LuaConnectorEmoTracker : LuaConnector
+internal class LuaConnectorEmoTracker : LuaConnector
 {
     public LuaConnectorEmoTracker(ILogger<LuaConnector> logger) : base(logger)
     {
     }
-
-    protected override int GetDefaultPort() => 43884;
-
-    protected override async Task SendInitialMessage()
-    {
-        await Task.Delay(TimeSpan.FromSeconds(0.5));
-        await Send(new EmoTrackerRequest()
-        {
-            Type = 0xE2
-        });
-    }
-
-    private async Task Send(string message)
-    {
-        if (Socket == null)
-        {
-            Logger.LogWarning("Attempted to send message with no valid socket");
-            return;
-        }
-        var bytes = BitConverter.GetBytes(message.Length).Reverse().ToArray();
-        try
-        {
-            await Socket.SendAsync(bytes);
-            await Task.Delay(TimeSpan.FromMilliseconds(10));
-            await Socket.SendAsync(Encoding.ASCII.GetBytes(message));
-        }
-        catch (SocketException ex)
-        {
-            Logger.LogError(ex, "Failed to send message to socket");
-            MarkAsDisconnected();
-        }
-    }
     
-    private async Task Send(EmoTrackerRequest message)
-    {
-        await Send(JsonSerializer.Serialize(message));
-    }
-
-    public override void GetAddress(SnesMemoryRequest request)
+     public override async Task GetAddress(SnesMemoryRequest request)
     {
         CurrentRequest = request;
-        _ = Send(new EmoTrackerRequest()
+        await Send(new EmoTrackerRequest()
         {
             Type = 0x0F,
             Address = TranslateAddress(request),
@@ -122,6 +86,17 @@ public class LuaConnectorEmoTracker : LuaConnector
         }
     }
 
+    protected override int GetDefaultPort() => 43884;
+
+    protected override async Task SendInitialMessage()
+    {
+        await Task.Delay(TimeSpan.FromSeconds(0.5));
+        await Send(new EmoTrackerRequest()
+        {
+            Type = 0xE2
+        });
+    }
+
     protected override void ProcessLine(string line, SnesMemoryRequest? request)
     {
         var message = JsonSerializer.Deserialize<EmoTrackerResponse>(line);
@@ -175,6 +150,32 @@ public class LuaConnectorEmoTracker : LuaConnector
             return null;
         }
     }
+    
+    private async Task Send(string message)
+    {
+        if (Socket == null)
+        {
+            Logger.LogWarning("Attempted to send message with no valid socket");
+            return;
+        }
+        var bytes = BitConverter.GetBytes(message.Length).Reverse().ToArray();
+        try
+        {
+            await Socket.SendAsync(bytes);
+            await Task.Delay(TimeSpan.FromMilliseconds(10));
+            await Socket.SendAsync(Encoding.ASCII.GetBytes(message));
+        }
+        catch (SocketException ex)
+        {
+            Logger.LogError(ex, "Failed to send message to socket");
+            MarkAsDisconnected();
+        }
+    }
+    
+    private async Task Send(EmoTrackerRequest message)
+    {
+        await Send(JsonSerializer.Serialize(message));
+    }
 
     class EmoTrackerResponse
     {
@@ -194,13 +195,14 @@ public class LuaConnectorEmoTracker : LuaConnector
         public int Value { get; set; }
 
         [JsonPropertyName("type")]
-        public int Type  { get; set; }
+        public int Type { get; set; }
 
         [JsonPropertyName("block")]
         public string Block { get; set; } = "";
 
     }
 
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Local")]
     class EmoTrackerRequest
     {
         [JsonPropertyName("id")]
