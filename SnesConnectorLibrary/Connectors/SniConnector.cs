@@ -33,7 +33,7 @@ internal class SniConnector : ISnesConnector
         {
             Disable();    
         }
-
+        
         _isEnabled = true;
         var address = string.IsNullOrEmpty(settings.SniAddress) ? "http://localhost:8191" : settings.SniAddress;
         if (!address.Contains(':'))
@@ -88,7 +88,7 @@ internal class SniConnector : ISnesConnector
                 Uri = _deviceAddress,
                 Request = new ReadMemoryRequest()
                 {
-                    RequestAddress = TranslateAddress(request),
+                    RequestAddress = (uint)TranslateAddress(request),
                     RequestAddressSpace = AddressSpace.FxPakPro,
                     RequestMemoryMapping = MemoryMapping.ExHiRom,
                     Size = (uint)request.Length
@@ -127,7 +127,7 @@ internal class SniConnector : ISnesConnector
                 Uri = _deviceAddress,
                 Request = new WriteMemoryRequest()
                 {
-                    RequestAddress = TranslateAddress(request),
+                    RequestAddress = (uint)TranslateAddress(request),
                     RequestAddressSpace = AddressSpace.FxPakPro,
                     RequestMemoryMapping = MemoryMapping.ExHiRom,
                     Data = ByteString.CopyFrom(request.Data.ToArray())
@@ -181,23 +181,8 @@ internal class SniConnector : ISnesConnector
             await Task.Delay(TimeSpan.FromSeconds(3));
         }
     }
-    
-    private uint TranslateAddress(SnesMemoryRequest message)
-    {
-        if (message.SnesMemoryDomain == SnesMemoryDomain.Rom)
-        {
-            return (uint)message.Address;
-        }
-        else if (message.SnesMemoryDomain == SnesMemoryDomain.SaveRam)
-        {
-            return (uint)message.Address - 0xa06000 + 0xE00000;
-        }
-        else if (message.SnesMemoryDomain == SnesMemoryDomain.Memory)
-        {
-            return (uint)message.Address - 0x7E0000 + 0xF50000;
-        }
-        return (uint)message.Address;
-    }
+
+    public int TranslateAddress(SnesMemoryRequest message) => message.GetTranslatedAddress(AddressFormat.FxPakPro);
     
     private async Task MonitorConnection()
     {

@@ -27,7 +27,7 @@ public partial class MainWindow : Window
         _snesConnectorService.AddRecurringRequest(new SnesRecurringMemoryRequest()
         {
             RequestType = SnesMemoryRequestType.Retrieve, 
-            SnesMemoryDomain = SnesMemoryDomain.SaveRam,
+            SnesMemoryDomain = SnesMemoryDomain.Save,
             Address = 0xA173FE,
             Length = 2,
             FrequencySeconds = 0.5,
@@ -105,6 +105,9 @@ public partial class MainWindow : Window
             _model.IsConnected = false;
             _model.IsConnectorConnecting = false;
             _model.IsDisconnected = true;
+            _model.CurrentGame = "N/A";
+            _model.Position = "N/A";
+            _model.Song = "N/A";
         };
     }
 
@@ -121,6 +124,9 @@ public partial class MainWindow : Window
             _model.IsConnected = false;
             _model.IsConnectorConnecting = false;
             _model.IsDisconnected = true;
+            _model.CurrentGame = "N/A";
+            _model.Position = "N/A";
+            _model.Song = "N/A";
         }
         else
         {

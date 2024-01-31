@@ -64,6 +64,8 @@ internal class LuaConnectorSni : LuaConnector
         }
     }
 
+    public override AddressFormat TargetAddressFormat => AddressFormat.Snes9x;
+    
     protected override int GetDefaultPort() => 65398;
 
     protected override async Task SendInitialMessage()

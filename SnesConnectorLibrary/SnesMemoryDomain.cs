@@ -13,7 +13,7 @@ public enum SnesMemoryDomain
     /// <summary>
     /// The cartridge save RAM (SRAM/CartRAM)
     /// </summary>
-    SaveRam,
+    Save,
     
     /// <summary>
     /// The actual ROM of the game (CartROM)

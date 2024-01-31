@@ -52,4 +52,11 @@ public interface ISnesConnector : IDisposable
     /// If the connector is currently available to take requests
     /// </summary>
     public bool CanMakeRequest { get; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="message"></param>
+    /// <returns></returns>
+    public int TranslateAddress(SnesMemoryRequest message);
 }

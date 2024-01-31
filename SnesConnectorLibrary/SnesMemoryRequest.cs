@@ -32,7 +32,20 @@ public class SnesMemoryRequest
     public ICollection<byte>? Data { get; set; }
     
     /// <summary>
+    /// The address format of the request to use for converting to the proper format for the connector
+    /// </summary>
+    public AddressFormat AddressFormat { get; set;  }
+    
+    /// <summary>
     /// Callback function when data is successfully retrieved from the SNES, if applicable
     /// </summary>
     public Action<SnesData>? OnResponse { get; set; }
+
+    /// <summary>
+    /// Gets the address translated to the requested format
+    /// </summary>
+    /// <param name="to">The address format to conver to</param>
+    /// <returns>The converted address location</returns>
+    public int GetTranslatedAddress(AddressFormat to) =>
+        AddressConversions.Convert(Address, SnesMemoryDomain, AddressFormat, to);
 }

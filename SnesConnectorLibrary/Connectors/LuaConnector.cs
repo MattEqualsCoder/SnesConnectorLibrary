@@ -57,6 +57,11 @@ internal abstract class LuaConnector : ISnesConnector
     public bool IsConnected { get; private set; }
     
     public bool CanMakeRequest => IsConnected && CurrentRequest == null && Socket?.Connected == true;
+    
+    public abstract AddressFormat TargetAddressFormat { get; }
+
+    public int TranslateAddress(SnesMemoryRequest request) =>
+        request.GetTranslatedAddress(TargetAddressFormat);
 
     protected abstract int GetDefaultPort();
     
@@ -90,7 +95,7 @@ internal abstract class LuaConnector : ISnesConnector
         {
             case SnesMemoryDomain.Memory:
                 return "WRAM";
-            case SnesMemoryDomain.SaveRam:
+            case SnesMemoryDomain.Save:
                 return "CARTRAM";
             case SnesMemoryDomain.Rom:
                 return "CARTROM";
@@ -122,35 +127,6 @@ internal abstract class LuaConnector : ISnesConnector
         }
     }
     
-    protected int TranslateAddress(SnesMemoryRequest message)
-    {
-        if (!IsBizHawk)
-        {
-            return message.Address;
-        }
-        
-        if (message.SnesMemoryDomain == SnesMemoryDomain.Rom)
-        {
-            return message.Address;
-        }
-        else if (message.SnesMemoryDomain == SnesMemoryDomain.SaveRam)
-        {
-            var offset = 0x0;
-            var remaining = message.Address - 0xa06000;
-            while (remaining >= 0x2000)
-            {
-                remaining -= 0x10000;
-                offset += 0x2000;
-            }
-            return offset + remaining;
-        }
-        else if (message.SnesMemoryDomain == SnesMemoryDomain.Memory)
-        {
-            return message.Address - 0x7e0000;
-        }
-        return message.Address;
-    }
-
     private void GetAddressAndPort(SnesConnectorSettings settings, out IPAddress address, out int port)
     {
         address = IPAddress.Loopback;

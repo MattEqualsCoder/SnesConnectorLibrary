@@ -278,29 +278,7 @@ internal class Usb2SnesConnector : ISnesConnector
         });
     }
 
-    private int TranslateAddress(SnesMemoryRequest message)
-    {
-        if (message.SnesMemoryDomain == SnesMemoryDomain.Rom)
-        {
-            return message.Address;
-        }
-        else if (message.SnesMemoryDomain == SnesMemoryDomain.SaveRam)
-        {
-            var offset = 0x0;
-            var remaining = message.Address - 0xa06000;
-            while (remaining >= 0x2000)
-            {
-                remaining -= 0x10000;
-                offset += 0x2000;
-            }
-            return 0xE00000 + offset + remaining;
-        }
-        else if (message.SnesMemoryDomain == SnesMemoryDomain.Memory)
-        {
-            return message.Address + 0x770000;
-        }
-        return message.Address;
-    }
+    public int TranslateAddress(SnesMemoryRequest message) => message.GetTranslatedAddress(AddressFormat.FxPakPro);
 
     enum ConnectionStep
     {

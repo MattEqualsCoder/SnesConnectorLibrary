@@ -19,7 +19,7 @@ public class EnumDescriptionConverter : IValueConverter
     {
         if(value is EnumDescription enumDescription)
         {
-            return enumDescription.Value;
+            return enumDescription.Value!;
         }
         throw new ArgumentException("ConvertBack:EnumDescription must be an enum.");
     }

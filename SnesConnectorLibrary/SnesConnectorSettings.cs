@@ -24,7 +24,7 @@ public class SnesConnectorSettings
     /// The address and ported used for the various Lua connectors. Fallback port depends on the type of Lua connector.
     /// </summary>
     public string LuaAddress { get; set; } = "";
-    
+
     /// <summary>
     /// The client named sent to USB2SNES/QUSB2SNES
     /// </summary>
