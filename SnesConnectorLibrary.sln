@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnesConnectorLibrary", "Sne
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnesConnectorTestApplication", "SnesConnectorTestApplication\SnesConnectorTestApplication.csproj", "{FCBC8F34-C4F8-4974-9550-D14AD5EA355B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SnesConnectorApp", "SnesConnectorApp\SnesConnectorApp.csproj", "{7BC99440-DD36-45FE-962A-5A41760284B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{FCBC8F34-C4F8-4974-9550-D14AD5EA355B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FCBC8F34-C4F8-4974-9550-D14AD5EA355B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FCBC8F34-C4F8-4974-9550-D14AD5EA355B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BC99440-DD36-45FE-962A-5A41760284B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BC99440-DD36-45FE-962A-5A41760284B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BC99440-DD36-45FE-962A-5A41760284B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BC99440-DD36-45FE-962A-5A41760284B9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
