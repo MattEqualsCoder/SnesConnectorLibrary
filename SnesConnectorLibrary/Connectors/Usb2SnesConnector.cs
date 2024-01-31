@@ -102,7 +102,6 @@ internal class Usb2SnesConnector : ISnesConnector
     {
         if (msg.MessageType == WebSocketMessageType.Text)
         {
-            _logger.LogInformation("Receiving text data: {Text}", msg.Text?.Trim());
             if (!string.IsNullOrEmpty(msg.Text))
             {
                 if (_connectionStep == ConnectionStep.DeviceList)
@@ -158,7 +157,7 @@ internal class Usb2SnesConnector : ISnesConnector
         var length = request.Length.ToString("X");
         _bytes.Clear();
 
-        _logger.LogInformation("Sending request for memory location {Address} of {Length}", address, length);
+        _logger.LogDebug("Sending request for memory location {Address} of {Length}", address, length);
         await _client.SendInstant(JsonSerializer.Serialize(new Usb2SnesRequest()
         {
             Opcode = "GetAddress",
@@ -242,7 +241,7 @@ internal class Usb2SnesConnector : ISnesConnector
             Opcode = "Info",
             Space = "SNES"
         }));
-        _logger.LogInformation("Requested info");
+        _logger.LogInformation("Requested info from usb2snes");
     }
 
     private async Task ParseDeviceInfo(string message)
@@ -270,7 +269,6 @@ internal class Usb2SnesConnector : ISnesConnector
         
         await Task.Delay(TimeSpan.FromMilliseconds(3000));
         
-        _logger.LogInformation("usb2snes rom: {Message}", rom);
         await GetAddress(new SnesMemoryRequest()
         {
             RequestType = SnesMemoryRequestType.Retrieve,

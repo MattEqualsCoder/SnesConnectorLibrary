@@ -80,7 +80,7 @@ internal class SniConnector : ISnesConnector
         }
         
         _pendingRequest = request;
-        _logger.LogInformation("Making request to device {Device}", _deviceAddress);
+        _logger.LogDebug("Making request to device {Device}", _deviceAddress);
         try
         {
             var response = await _memory.SingleReadAsync(new SingleReadMemoryRequest()

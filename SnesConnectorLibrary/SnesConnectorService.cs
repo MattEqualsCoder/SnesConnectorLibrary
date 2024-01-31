@@ -10,6 +10,7 @@ internal class SnesConnectorService : ISnesConnectorService
     private readonly List<SnesMemoryRequest> _queue = new();
     private readonly List<SnesRecurringMemoryRequest> _recurringRequests = new();
     private ISnesConnector? _currentConnector;
+    private SnesConnectorType _currentConnectorType;
 
     public SnesConnectorService(ILogger<SnesConnectorService> logger, Usb2SnesConnector usb2SnesConnector, LuaConnectorDefault luaConnectorDefault, LuaConnectorEmoTracker luaConnectorEmoTracker, LuaConnectorCrowdControl luaConnectorCrowdControl, LuaConnectorSni luaConnectorSni, SniConnector sniConnector)
     {
@@ -39,6 +40,7 @@ internal class SnesConnectorService : ISnesConnectorService
     {
         Disconnect();
         _logger.LogInformation("Connecting to connector type {Type}", settings.ConnectorType.ToString());
+        _currentConnectorType = settings.ConnectorType;
         _currentConnector = _connectors[settings.ConnectorType];
         _currentConnector.OnConnected += CurrentConnectorOnConnected;
         _currentConnector.OnDisconnected += CurrentConnectorOnDisconnected;
@@ -94,11 +96,13 @@ internal class SnesConnectorService : ISnesConnectorService
 
     private void CurrentConnectorOnDisconnected(object? sender, EventArgs e)
     {
+        _logger.LogInformation("Disconnected from {Type} connector", _currentConnectorType.ToString());
         OnDisconnected?.Invoke(sender, e);
     }
 
     private void CurrentConnectorOnConnected(object? sender, EventArgs e)
     {
+        _logger.LogInformation("Successfully connected to {Type} connector", _currentConnectorType.ToString());
         _ = ProcessRequests();
         OnConnected?.Invoke(sender, e);
     }

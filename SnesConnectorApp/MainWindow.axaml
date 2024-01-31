@@ -3,9 +3,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:snesConnectorApp="clr-namespace:SnesConnectorApp"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        Width="800"
-        Height="450"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="150"
+        Width="400"
+        Height="150"
         x:Class="SnesConnectorApp.MainWindow"
         x:DataType="snesConnectorApp:MainWindowViewModel"
         Title="SNES Connector Test App">
@@ -16,7 +16,20 @@
             <Label IsVisible="{Binding IsConnected}">Connected</Label>
             <Label IsVisible="{Binding IsConnectorConnecting}">Connecting</Label>
             <Label IsVisible="{Binding IsDisconnected}">Disconnected</Label>
-        </StackPanel>    
+        </StackPanel>
+        
+        <StackPanel Orientation="Horizontal">
+            <Label>Current Game: </Label><Label Content="{Binding CurrentGame }"></Label>
+        </StackPanel>
+        
+        <StackPanel Orientation="Horizontal">
+            <Label>Position: </Label><Label Content="{Binding Position }"></Label>
+        </StackPanel>
+        
+        <StackPanel Orientation="Horizontal">
+            <Label>Song: </Label><Label Content="{Binding Song }"></Label>
+        </StackPanel>
+        
     </StackPanel>
     
 </Window>

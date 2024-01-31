@@ -38,6 +38,30 @@ public class MainWindowViewModel : INotifyPropertyChanged
         get => _isConnectorSelected;
         set => SetField(ref _isConnectorSelected, value);
     }
+    
+    private string _currentGame = "N/A";
+
+    public string CurrentGame
+    {
+        get => _currentGame;
+        set => SetField(ref _currentGame, value);
+    }
+    
+    private string _position = "N/A";
+
+    public string Position
+    {
+        get => _position;
+        set => SetField(ref _position, value);
+    }
+    
+    private string _song = "N/A";
+
+    public string Song
+    {
+        get => _song;
+        set => SetField(ref _song, value);
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

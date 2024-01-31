@@ -27,14 +27,70 @@ public partial class MainWindow : Window
         _snesConnectorService.AddRecurringRequest(new SnesRecurringMemoryRequest()
         {
             RequestType = SnesMemoryRequestType.Retrieve, 
-            SnesMemoryDomain = SnesMemoryDomain.Memory,
-            Address = 0x7e09C2,
-            Length = 0x400,
-            FrequencySeconds = 1,
+            SnesMemoryDomain = SnesMemoryDomain.SaveRam,
+            Address = 0xA173FE,
+            Length = 2,
+            FrequencySeconds = 0.5,
             OnResponse = data =>
             {
-                Log.Information("Response: {Data}", data.ReadUInt16(0x7e09C2));
+                _model.CurrentGame = data.ReadUInt8(0xA173FE) == 0xFF ? "Super Metroid" : "A Link to the Past";
             },
+        });
+        
+        _snesConnectorService.AddRecurringRequest(new SnesRecurringMemoryRequest()
+        {
+            RequestType = SnesMemoryRequestType.Retrieve, 
+            SnesMemoryDomain = SnesMemoryDomain.Memory,
+            Address = 0x7E0020,
+            Length = 4,
+            FrequencySeconds = 0.5,
+            OnResponse = data =>
+            {
+                _model.Position = $"({data.ReadUInt16(0x7E0022)}, {data.ReadUInt16(0x7E0020)})";
+            },
+            Filter = () => _model.CurrentGame == "A Link to the Past"
+        });
+        
+        _snesConnectorService.AddRecurringRequest(new SnesRecurringMemoryRequest()
+        {
+            RequestType = SnesMemoryRequestType.Retrieve, 
+            SnesMemoryDomain = SnesMemoryDomain.Memory,
+            Address = 0x7E0AF6,
+            Length = 8,
+            FrequencySeconds = 0.5,
+            OnResponse = data =>
+            {
+                _model.Position = $"({data.ReadUInt16(0x7E0AF6)}, {data.ReadUInt16(0x7E0AFA)})";
+            },
+            Filter = () => _model.CurrentGame == "Super Metroid"
+        });
+        
+        _snesConnectorService.AddRecurringRequest(new SnesRecurringMemoryRequest()
+        {
+            RequestType = SnesMemoryRequestType.Retrieve, 
+            SnesMemoryDomain = SnesMemoryDomain.Memory,
+            Address = 0x7E010B,
+            Length = 1,
+            FrequencySeconds = 0.5,
+            OnResponse = data =>
+            {
+                _model.Song = $"{data.Raw[0]}";
+            },
+            Filter = () => _model.CurrentGame == "A Link to the Past"
+        });
+        
+        _snesConnectorService.AddRecurringRequest(new SnesRecurringMemoryRequest()
+        {
+            RequestType = SnesMemoryRequestType.Retrieve, 
+            SnesMemoryDomain = SnesMemoryDomain.Memory,
+            Address = 0x7E0332,
+            Length = 1,
+            FrequencySeconds = 0.5,
+            OnResponse = data =>
+            {
+                _model.Song = $"{data.Raw[0]}";
+            },
+            Filter = () => _model.CurrentGame == "Super Metroid"
         });
 
         _snesConnectorService.OnConnected += (sender, args) =>
@@ -51,7 +107,6 @@ public partial class MainWindow : Window
             _model.IsDisconnected = true;
         };
     }
-
 
     private void SelectingItemsControl_OnSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
