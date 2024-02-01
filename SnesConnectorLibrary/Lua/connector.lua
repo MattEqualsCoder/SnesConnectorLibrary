@@ -154,6 +154,7 @@ local function on_tick()
         local currentTime = os.time()
         if lastMessage + DISCONNECT_DELAY <= currentTime then
             connected = false
+            tcp:close()
         end
     else
         local currentTime = os.time()

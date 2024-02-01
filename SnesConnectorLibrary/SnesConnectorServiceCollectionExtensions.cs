@@ -12,7 +12,6 @@ public static class SnesConnectorServiceCollectionExtensions
             .AddSingleton<LuaConnectorDefault>()
             .AddSingleton<LuaConnectorEmoTracker>()
             .AddSingleton<LuaConnectorCrowdControl>()
-            .AddSingleton<LuaConnectorSni>()
             .AddSingleton<SniConnector>();
 
         return services;

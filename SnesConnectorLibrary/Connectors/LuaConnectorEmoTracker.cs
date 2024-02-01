@@ -86,7 +86,7 @@ internal class LuaConnectorEmoTracker : LuaConnector
         }
     }
 
-    public override AddressFormat TargetAddressFormat => AddressFormat.Snes9x;
+    public override AddressFormat TargetAddressFormat => AddressFormat.BizHawk;
     
     protected override int GetDefaultPort() => 43884;
 

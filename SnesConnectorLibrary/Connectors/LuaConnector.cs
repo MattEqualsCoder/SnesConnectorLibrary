@@ -115,7 +115,7 @@ internal abstract class LuaConnector : ISnesConnector
     {
         if (Socket?.Connected == true)
         {
-            Socket?.Disconnect(true);    
+            Socket?.Dispose();
         }
         
         if (IsConnected)

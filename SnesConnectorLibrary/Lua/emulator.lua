@@ -50,7 +50,9 @@ end
 
 
 function emulator.translate_address(address, domain)
-    if is_snes9x then
+    if emulator.is_snes9x then
+         return address
+    else
         if domain == "WRAM" then
             return address - 0x7e0000;
         elseif domain == "CARTRAM" then
@@ -64,8 +66,6 @@ function emulator.translate_address(address, domain)
         elseif domain == "CARTROM" then
             return address
         end
-    else
-        return address
     end
 end
 

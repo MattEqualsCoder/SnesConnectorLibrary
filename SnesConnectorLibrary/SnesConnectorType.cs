@@ -21,7 +21,4 @@ public enum SnesConnectorType
     
     [Description("Crowd Control Lua Script")]
     LuaCrowdControl,
-    
-    [Description("QUSB2SNES/Sni Lua Script")]
-    LuaSni,
 }

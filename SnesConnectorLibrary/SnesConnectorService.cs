@@ -12,14 +12,13 @@ internal class SnesConnectorService : ISnesConnectorService
     private ISnesConnector? _currentConnector;
     private SnesConnectorType _currentConnectorType;
 
-    public SnesConnectorService(ILogger<SnesConnectorService> logger, Usb2SnesConnector usb2SnesConnector, LuaConnectorDefault luaConnectorDefault, LuaConnectorEmoTracker luaConnectorEmoTracker, LuaConnectorCrowdControl luaConnectorCrowdControl, LuaConnectorSni luaConnectorSni, SniConnector sniConnector)
+    public SnesConnectorService(ILogger<SnesConnectorService> logger, Usb2SnesConnector usb2SnesConnector, LuaConnectorDefault luaConnectorDefault, LuaConnectorEmoTracker luaConnectorEmoTracker, LuaConnectorCrowdControl luaConnectorCrowdControl, SniConnector sniConnector)
     {
         _logger = logger;
         _connectors[SnesConnectorType.Usb2Snes] = usb2SnesConnector;
         _connectors[SnesConnectorType.Lua] = luaConnectorDefault;
         _connectors[SnesConnectorType.LuaEmoTracker] = luaConnectorEmoTracker;
         _connectors[SnesConnectorType.LuaCrowdControl] = luaConnectorCrowdControl;
-        _connectors[SnesConnectorType.LuaSni] = luaConnectorSni;
         _connectors[SnesConnectorType.Sni] = sniConnector;
     }
     
