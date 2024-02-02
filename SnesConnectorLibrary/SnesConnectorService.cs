@@ -1,17 +1,28 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Reflection;
+using Microsoft.Extensions.Logging;
 using SnesConnectorLibrary.Connectors;
 
 namespace SnesConnectorLibrary;
 
 internal class SnesConnectorService : ISnesConnectorService
 {
-    private readonly ILogger<SnesConnectorService> _logger;
+    private readonly ILogger<SnesConnectorService>? _logger;
     private readonly Dictionary<SnesConnectorType, ISnesConnector> _connectors = new();
     private readonly List<SnesMemoryRequest> _queue = new();
     private readonly List<SnesRecurringMemoryRequest> _recurringRequests = new();
     private ISnesConnector? _currentConnector;
     private SnesConnectorType _currentConnectorType;
+    private Dictionary<string, SnesData> _previousRequestData = new();
 
+    public SnesConnectorService()
+    {
+        _connectors[SnesConnectorType.Usb2Snes] = new Usb2SnesConnector();
+        _connectors[SnesConnectorType.Lua] = new LuaConnectorDefault();
+        _connectors[SnesConnectorType.LuaEmoTracker] = new LuaConnectorEmoTracker();
+        _connectors[SnesConnectorType.LuaCrowdControl] = new LuaConnectorCrowdControl();
+        _connectors[SnesConnectorType.Sni] = new SniConnector();
+    }
+    
     public SnesConnectorService(ILogger<SnesConnectorService> logger, Usb2SnesConnector usb2SnesConnector, LuaConnectorDefault luaConnectorDefault, LuaConnectorEmoTracker luaConnectorEmoTracker, LuaConnectorCrowdControl luaConnectorCrowdControl, SniConnector sniConnector)
     {
         _logger = logger;
@@ -38,13 +49,14 @@ internal class SnesConnectorService : ISnesConnectorService
     public void Connect(SnesConnectorSettings settings)
     {
         Disconnect();
-        _logger.LogInformation("Connecting to connector type {Type}", settings.ConnectorType.ToString());
+        _logger?.LogInformation("Connecting to connector type {Type}", settings.ConnectorType.ToString());
         _currentConnectorType = settings.ConnectorType;
         _currentConnector = _connectors[settings.ConnectorType];
         _currentConnector.OnConnected += CurrentConnectorOnConnected;
         _currentConnector.OnDisconnected += CurrentConnectorOnDisconnected;
         _currentConnector.OnMessage += CurrentConnectorOnMessage;
         _currentConnector.Enable(settings);
+        _previousRequestData.Clear();
     }
     
     public void Disconnect()
@@ -72,15 +84,79 @@ internal class SnesConnectorService : ISnesConnectorService
     {
         if (_currentConnector?.IsConnected != true)
         {
-            _logger.LogWarning("No connected connector");
+            _logger?.LogWarning("No connected connector");
         }
 
         _queue.Add(request);
     }
     
-    public void AddRecurringRequest(SnesRecurringMemoryRequest request)
+    public SnesRecurringMemoryRequest AddRecurringRequest(SnesRecurringMemoryRequest request)
     {
         _recurringRequests.Add(request);
+        return request;
+    }
+
+    public void RemoveRecurringRequest(SnesRecurringMemoryRequest request)
+    {
+        _recurringRequests.Remove(request);
+    }
+
+    public bool CreateLuaScriptsFolder(string folder)
+    {
+        if (!Directory.Exists(folder))
+        {
+            try
+            {
+                Directory.CreateDirectory(folder);
+                Directory.CreateDirectory(Path.Combine(folder, "x64"));
+                Directory.CreateDirectory(Path.Combine(folder, "x86"));
+            }
+            catch (Exception e)
+            {
+                _logger?.LogInformation(e, "Could not create target Lua folder {Path}", folder);
+                return false;
+            }
+        }
+
+        try
+        {
+            CopyEmbeddedResource(folder, "json.lua");
+            CopyEmbeddedResource(folder, "emulator.lua");
+            CopyEmbeddedResource(folder, "connector.lua");
+            CopyEmbeddedResource(folder, "x64/luasocket.LICENSE.txt");
+            CopyEmbeddedResource(folder, "x64/socket-linux-5-1.so");
+            CopyEmbeddedResource(folder, "x64/socket-linux-5-4.so");
+            CopyEmbeddedResource(folder, "x64/socket-windows-5-1.dll");
+            CopyEmbeddedResource(folder, "x64/socket-windows-5-4.dll");
+            CopyEmbeddedResource(folder, "x86/luasocket.LICENSE.txt");
+            CopyEmbeddedResource(folder, "x86/socket-windows-5-1.dll");
+            _logger?.LogInformation("Created Lua files at {Path}", folder);
+            return true;
+        }
+        catch (Exception e)
+        {
+            _logger?.LogInformation(e, "Could not create target Lua file(s)");
+            return false;
+        }
+    }
+
+    private void CopyEmbeddedResource(string targetFolder, string relativePath)
+    {
+        var inputPath = "SnesConnectorLibrary.Lua." + relativePath.Replace('/', '.');
+        var outputPath = Path.Combine(targetFolder, relativePath.Replace('/', Path.DirectorySeparatorChar));
+        using var input =  Assembly.GetExecutingAssembly().GetManifestResourceStream(inputPath);
+
+        if (input == null)
+        {
+            throw new InvalidOperationException($"Could not copy file {inputPath} to {outputPath}");
+        }
+        using var output = File.Create(outputPath);
+        var buffer = new byte[8192];
+        int bytesRead;
+        while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
+        {
+            output.Write(buffer, 0, bytesRead);
+        }
     }
 
     private void CurrentConnectorOnMessage(object sender, SnesDataReceivedEventArgs e)
@@ -88,20 +164,31 @@ internal class SnesConnectorService : ISnesConnectorService
         if (e.Request is SnesRecurringMemoryRequest recurringRequest)
         {
             recurringRequest.LastRunTime = DateTime.Now;
+
+            if (recurringRequest.RespondOnChangeOnly)
+            {
+                var key = recurringRequest.Key;
+                if (_previousRequestData.TryGetValue(key, out var prevRequest) && prevRequest.Equals(e.Data))
+                {
+                    return;
+                }
+                _previousRequestData[key] = e.Data;
+            }
         }
+        
         e.Request.OnResponse?.Invoke(e.Data);
         OnMessage?.Invoke(sender, e);
     }
 
     private void CurrentConnectorOnDisconnected(object? sender, EventArgs e)
     {
-        _logger.LogInformation("Disconnected from {Type} connector", _currentConnectorType.ToString());
+        _logger?.LogInformation("Disconnected from {Type} connector", _currentConnectorType.ToString());
         OnDisconnected?.Invoke(sender, e);
     }
 
     private void CurrentConnectorOnConnected(object? sender, EventArgs e)
     {
-        _logger.LogInformation("Successfully connected to {Type} connector", _currentConnectorType.ToString());
+        _logger?.LogInformation("Successfully connected to {Type} connector", _currentConnectorType.ToString());
         _ = ProcessRequests();
         OnConnected?.Invoke(sender, e);
     }
@@ -127,6 +214,8 @@ internal class SnesConnectorService : ISnesConnectorService
                     }
                 }
             }
+            
+            
             await Task.Delay(TimeSpan.FromMilliseconds(50));
         }
     }
@@ -135,7 +224,7 @@ internal class SnesConnectorService : ISnesConnectorService
     {
         if (!IsConnected)
         {
-            _logger.LogWarning("No connected connector");
+            _logger?.LogWarning("No connected connector");
             return;
         }
         

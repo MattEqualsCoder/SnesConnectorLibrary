@@ -13,9 +13,13 @@
         <StackPanel Orientation="Horizontal">
             <Label Margin="0 2 2 2">Connector: </Label>
             <ComboBox ItemsSource="{Binding Connectors}" SelectedIndex="0" MinWidth="200" SelectionChanged="SelectingItemsControl_OnSelectionChanged"></ComboBox>
-            <Label IsVisible="{Binding IsConnected}">Connected</Label>
-            <Label IsVisible="{Binding IsConnectorConnecting}">Connecting</Label>
-            <Label IsVisible="{Binding IsDisconnected}">Disconnected</Label>
+            <Label Margin="2 2 2 2" IsVisible="{Binding IsConnected}">Connected</Label>
+            <Label Margin="2 2 2 2" IsVisible="{Binding IsConnectorConnecting}">Connecting</Label>
+            <Label Margin="2 2 2 2" IsVisible="{Binding IsDisconnected}">Disconnected</Label>
+        </StackPanel>
+        
+        <StackPanel Orientation="Horizontal">
+            <Label>Rom Title: </Label><Label Content="{Binding Title }"></Label>
         </StackPanel>
         
         <StackPanel Orientation="Horizontal">
@@ -26,10 +30,11 @@
             <Label>Position: </Label><Label Content="{Binding Position }"></Label>
         </StackPanel>
         
-        <StackPanel Orientation="Horizontal">
-            <Label>Song: </Label><Label Content="{Binding Song }"></Label>
+        <StackPanel Orientation="Horizontal" Margin="0 5">
+            <Button Name="RefillHealthButton" Click="RefillHealthButton_OnClick">Refill Health</Button>
+            <Button Margin="10 0" Name="GiveItemButton" Click="GiveItemButton_OnClick">Give Item</Button>
         </StackPanel>
         
-    </StackPanel>
+        </StackPanel>
     
 </Window>

@@ -19,6 +19,15 @@ public interface ISnesConnectorService : IDisposable
     /// Event for when the active connector receives a message from the SNES
     /// </summary>
     public event SnesDataReceivedEventHandler? OnMessage;
+    
+    /// <summary>
+    /// Creates the default instance of an ISnesConnectorService
+    /// </summary>
+    /// <returns>The created ISnesConnectorService</returns>
+    public static ISnesConnectorService CreateService()
+    {
+        return new SnesConnectorService();
+    }
 
     /// <summary>
     /// If the connector is currently connected to the SNES
@@ -52,5 +61,21 @@ public interface ISnesConnectorService : IDisposable
     /// Makes a recurring scheduled request to the SNES via the active connector
     /// </summary>
     /// <param name="request">The request to make, including details of when it should run</param>
-    public void AddRecurringRequest(SnesRecurringMemoryRequest request);
+    /// <returns>The added request</returns>
+    public SnesRecurringMemoryRequest AddRecurringRequest(SnesRecurringMemoryRequest request);
+
+    /// <summary>
+    /// Removes a previously added scheduled request
+    /// </summary>
+    /// <param name="request">The request to remove</param>
+    public void RemoveRecurringRequest(SnesRecurringMemoryRequest request);
+
+    /// <summary>
+    /// Creates all of the Lua script files at the provided location
+    /// </summary>
+    /// <param name="folder">The folder to create the Lua scripts at</param>
+    /// <returns>True if successful, false otherwise</returns>
+    public bool CreateLuaScriptsFolder(string folder);
+
+
 }

@@ -9,6 +9,10 @@ namespace SnesConnectorLibrary.Connectors;
 
 internal class LuaConnectorEmoTracker : LuaConnector
 {
+    public LuaConnectorEmoTracker()
+    {
+    }
+    
     public LuaConnectorEmoTracker(ILogger<LuaConnector> logger) : base(logger)
     {
     }
@@ -86,7 +90,7 @@ internal class LuaConnectorEmoTracker : LuaConnector
         }
     }
 
-    public override AddressFormat TargetAddressFormat => AddressFormat.BizHawk;
+    public override AddressFormat TargetAddressFormat => IsBizHawk ? AddressFormat.BizHawk : AddressFormat.Snes9x;
     
     protected override int GetDefaultPort() => 43884;
 
@@ -105,8 +109,8 @@ internal class LuaConnectorEmoTracker : LuaConnector
 
         if (message?.Type == 0xE2)
         {
-            IsBizHawk = message.Message != "Not Supported";
-            Logger.LogInformation("Identified as running emulator {Type}", IsBizHawk ? "BizHawk" : "Snes9x");
+            IsBizHawk = message.Message != "Not Supported" && message.Message != "Unsupported";
+            Logger?.LogInformation("Determined as running emulator {Type} ({Message})", IsBizHawk ? "BizHawk" : "Snes9x", message.Message);
             MarkConnected();
         }
         else if (message?.Type == 0x0F && request != null)
@@ -157,7 +161,7 @@ internal class LuaConnectorEmoTracker : LuaConnector
     {
         if (Socket == null)
         {
-            Logger.LogWarning("Attempted to send message with no valid socket");
+            Logger?.LogWarning("Attempted to send message with no valid socket");
             return;
         }
         var bytes = BitConverter.GetBytes(message.Length).Reverse().ToArray();
@@ -169,7 +173,7 @@ internal class LuaConnectorEmoTracker : LuaConnector
         }
         catch (SocketException ex)
         {
-            Logger.LogError(ex, "Failed to send message to socket");
+            Logger?.LogError(ex, "Failed to send message to socket");
             MarkAsDisconnected();
         }
     }

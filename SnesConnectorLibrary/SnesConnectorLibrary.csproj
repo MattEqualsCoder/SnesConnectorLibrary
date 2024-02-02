@@ -20,4 +20,27 @@
       <PackageReference Include="Websocket.Client" Version="5.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="Lua\connector.lua" />
+      <EmbeddedResource Include="Lua\connector.lua" />
+      <None Remove="Lua\emulator.lua" />
+      <EmbeddedResource Include="Lua\emulator.lua" />
+      <None Remove="Lua\json.lua" />
+      <EmbeddedResource Include="Lua\json.lua" />
+      <None Remove="Lua\x86\luasocket.LICENSE.txt" />
+      <EmbeddedResource Include="Lua\x86\luasocket.LICENSE.txt" />
+      <None Remove="Lua\x86\socket-windows-5-1.dll" />
+      <EmbeddedResource Include="Lua\x86\socket-windows-5-1.dll" />
+      <None Remove="Lua\x64\luasocket.LICENSE.txt" />
+      <EmbeddedResource Include="Lua\x64\luasocket.LICENSE.txt" />
+      <None Remove="Lua\x64\socket-linux-5-1.so" />
+      <EmbeddedResource Include="Lua\x64\socket-linux-5-1.so" />
+      <None Remove="Lua\x64\socket-linux-5-4.so" />
+      <EmbeddedResource Include="Lua\x64\socket-linux-5-4.so" />
+      <None Remove="Lua\x64\socket-windows-5-1.dll" />
+      <EmbeddedResource Include="Lua\x64\socket-windows-5-1.dll" />
+      <None Remove="Lua\x64\socket-windows-5-4.dll" />
+      <EmbeddedResource Include="Lua\x64\socket-windows-5-4.dll" />
+    </ItemGroup>
+
 </Project>

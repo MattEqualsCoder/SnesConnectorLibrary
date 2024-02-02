@@ -55,12 +55,12 @@ public class MainWindowViewModel : INotifyPropertyChanged
         set => SetField(ref _position, value);
     }
     
-    private string _song = "N/A";
+    private string _title = "N/A";
 
-    public string Song
+    public string Title
     {
-        get => _song;
-        set => SetField(ref _song, value);
+        get => _title;
+        set => SetField(ref _title, value);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

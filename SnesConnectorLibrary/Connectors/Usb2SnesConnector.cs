@@ -2,13 +2,14 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net.WebSockets;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using SNI;
 using Websocket.Client;
 
 namespace SnesConnectorLibrary.Connectors;
 
 internal class Usb2SnesConnector : ISnesConnector
 {
-    private readonly ILogger<Usb2SnesConnector> _logger;
+    private readonly ILogger<Usb2SnesConnector>? _logger;
     private WebsocketClient? _client;
     private bool _hasReceivedMessage;
     private string _clientName = "SnesConnectorLibrary";
@@ -16,6 +17,10 @@ internal class Usb2SnesConnector : ISnesConnector
     private ConnectionStep _connectionStep = ConnectionStep.DeviceList;
     private readonly List<byte> _bytes = new();
 
+    public Usb2SnesConnector()
+    {
+    }
+    
     public Usb2SnesConnector(ILogger<Usb2SnesConnector> logger)
     {
         _logger = logger;
@@ -44,7 +49,7 @@ internal class Usb2SnesConnector : ISnesConnector
         {
             address = "ws://" + address;
         }
-        _logger.LogInformation("Attempting to connect to usb2snes server at {Address}", address);
+        _logger?.LogInformation("Attempting to connect to usb2snes server at {Address}", address);
         
         _client = new WebsocketClient(new Uri(address));
         _client.ErrorReconnectTimeout = TimeSpan.FromSeconds(5);
@@ -76,7 +81,7 @@ internal class Usb2SnesConnector : ISnesConnector
 
     private void OnClientConnected(ReconnectionInfo info)
     {
-        _logger.LogInformation("Client connected: {Type}", info.Type);
+        _logger?.LogInformation("Client connected: {Type}", info.Type);
         _pendingRequest = null;
         _hasReceivedMessage = false;
         _connectionStep = ConnectionStep.DeviceList;
@@ -92,7 +97,7 @@ internal class Usb2SnesConnector : ISnesConnector
     {
         if (IsConnected)
         {
-            _logger.LogInformation("Client disconnected: {Type}", info.Type);
+            _logger?.LogInformation("Client disconnected: {Type}", info.Type);
             IsConnected = false;
             OnDisconnected?.Invoke(this, EventArgs.Empty);
         }
@@ -141,7 +146,7 @@ internal class Usb2SnesConnector : ISnesConnector
         }
         else
         {
-            _logger.LogInformation("Other");
+            _logger?.LogInformation("Other");
         }
     }
 
@@ -157,7 +162,7 @@ internal class Usb2SnesConnector : ISnesConnector
         var length = request.Length.ToString("X");
         _bytes.Clear();
 
-        _logger.LogDebug("Sending request for memory location {Address} of {Length}", address, length);
+        _logger?.LogDebug("Sending request for memory location {Address} of {Length}", address, length);
         await _client.SendInstant(JsonSerializer.Serialize(new Usb2SnesRequest()
         {
             Opcode = "GetAddress",
@@ -183,7 +188,7 @@ internal class Usb2SnesConnector : ISnesConnector
         var address = TranslateAddress(request).ToString("X");
         var length = request.Data.Count.ToString("X");
         
-        _logger.LogInformation("PutAddress Send");
+        _logger?.LogInformation("PutAddress Send");
         
         await _client.SendInstant(JsonSerializer.Serialize(new Usb2SnesRequest()
         {
@@ -204,17 +209,17 @@ internal class Usb2SnesConnector : ISnesConnector
         var response = JsonSerializer.Deserialize<Usb2SnesDeviceListResponse>(message);
         if (response?.Results == null)
         {
-            _logger.LogError("Invalid json response {Text}", message);
+            _logger?.LogError("Invalid json response {Text}", message);
             return;
         }
 
         if (response.Results.Count == 0)
         {
-            _logger.LogInformation("No devices found");
+            _logger?.LogInformation("No devices found");
             return;
         }
             
-        _logger.LogInformation("Connecting to USB2SNES device {Device} as {ClientName}", response.Results.First(), _clientName);
+        _logger?.LogInformation("Connecting to USB2SNES device {Device} as {ClientName}", response.Results.First(), _clientName);
             
         await _client!.SendInstant(JsonSerializer.Serialize(new Usb2SnesRequest()
         {
@@ -241,12 +246,12 @@ internal class Usb2SnesConnector : ISnesConnector
             Opcode = "Info",
             Space = "SNES"
         }));
-        _logger.LogInformation("Requested info from usb2snes");
+        _logger?.LogInformation("Requested info from usb2snes");
     }
 
     private async Task ParseDeviceInfo(string message)
     {
-        _logger.LogInformation("usb2snes info: {Message}", message);
+        _logger?.LogInformation("usb2snes info: {Message}", message);
         
         var response = JsonSerializer.Deserialize<Usb2SnesDeviceListResponse>(message);
         var rom = response?.Results?.Skip(2).FirstOrDefault();
@@ -274,7 +279,9 @@ internal class Usb2SnesConnector : ISnesConnector
             RequestType = SnesMemoryRequestType.Retrieve,
             Address = 0x7e0020,
             Length = 1,
-            SnesMemoryDomain = SnesMemoryDomain.Memory
+            SnesMemoryDomain = SnesMemoryDomain.Memory,
+            AddressFormat = AddressFormat.Snes9x,
+            SniMemoryMapping = MemoryMapping.Unknown
         });
     }
 

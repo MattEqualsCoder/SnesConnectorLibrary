@@ -19,6 +19,6 @@ public enum SnesConnectorType
     [Description("EmoTracker Lua Script")]
     LuaEmoTracker,
     
-    [Description("Crowd Control Lua Script")]
+    [Description("Crowd Control Lua Script (BizHawk only)")]
     LuaCrowdControl,
 }

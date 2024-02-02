@@ -8,6 +8,10 @@ namespace SnesConnectorLibrary.Connectors;
 
 internal class LuaConnectorDefault : LuaConnector
 {
+    public LuaConnectorDefault()
+    {
+    }
+    
     public LuaConnectorDefault(ILogger<LuaConnector> logger) : base(logger)
     {
     }
@@ -28,7 +32,7 @@ internal class LuaConnectorDefault : LuaConnector
     {
         if (request.Data == null)
         {
-            Logger.LogWarning("Attempted to write a null byte array");
+            Logger?.LogWarning("Attempted to write a null byte array");
             return;
         }
         
@@ -58,13 +62,13 @@ internal class LuaConnectorDefault : LuaConnector
         var response = JsonSerializer.Deserialize<LuaResponse>(line);
         if (response == null)
         {
-            Logger.LogError("Invalid response of {Line}", line);
+            Logger?.LogError("Invalid response of {Line}", line);
             return;
         }
 
         if (response.Action == "version")
         {
-            Logger.LogInformation("Connected to emulator {Name}", response.Value);
+            Logger?.LogInformation("Connected to emulator {Name}", response.Value);
             IsBizHawk = response.Value == "BizHawk";
             MarkConnected();
         }
@@ -83,7 +87,7 @@ internal class LuaConnectorDefault : LuaConnector
     {
         if (Socket == null)
         {
-            Logger.LogWarning("Attempted to send request to null socket");
+            Logger?.LogWarning("Attempted to send request to null socket");
             return;
         }
         try
@@ -93,7 +97,7 @@ internal class LuaConnectorDefault : LuaConnector
         }
         catch (SocketException ex)
         {
-            Logger.LogError(ex, "Error sending message");
+            Logger?.LogError(ex, "Error sending message");
             MarkAsDisconnected();
         }
     }

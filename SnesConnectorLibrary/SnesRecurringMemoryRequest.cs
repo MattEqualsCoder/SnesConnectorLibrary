@@ -8,22 +8,23 @@ public class SnesRecurringMemoryRequest : SnesMemoryRequest
     /// <summary>
     /// The time in between successive requests
     /// </summary>
-    public double FrequencySeconds { get; set; }
-    
-    /// <summary>
-    /// When the request will be available to be called next
-    /// </summary>
-    public DateTime NextRunTime => LastRunTime + TimeSpan.FromSeconds(FrequencySeconds);
+    public double FrequencySeconds { get; init; }
     
     /// <summary>
     /// Function that, if set, will be called to see if the request should be made or not.
     /// </summary>
-    public Func<bool>? Filter { get; set; }
-
-    /// <summary>
-    /// If the request is available to be ran at the current moment
-    /// </summary>
-    public bool CanRun => DateTime.Now > NextRunTime && (Filter == null || Filter?.Invoke() == true);
+    public Func<bool>? Filter { get; init; }
     
+    /// <summary>
+    /// If the callbacks should only trigger when the value has changed
+    /// </summary>
+    public bool RespondOnChangeOnly { get; init; }
+    
+    internal DateTime NextRunTime => LastRunTime + TimeSpan.FromSeconds(FrequencySeconds);
+    
+    internal bool CanRun => DateTime.Now > NextRunTime && (Filter == null || Filter?.Invoke() == true);
+
     internal DateTime LastRunTime = DateTime.MinValue;
+    
+    internal string Key => $"{Address}_{Length}_{SnesMemoryDomain}";
 }

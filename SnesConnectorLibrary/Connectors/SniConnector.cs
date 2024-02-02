@@ -8,7 +8,7 @@ namespace SnesConnectorLibrary.Connectors;
 
 internal class SniConnector : ISnesConnector
 {
-    private readonly ILogger<SniConnector> _logger;
+    private readonly ILogger<SniConnector>? _logger;
     private string? _address;
     private Devices.DevicesClient? _devices;
     private DeviceMemory.DeviceMemoryClient? _memory;
@@ -17,6 +17,10 @@ internal class SniConnector : ISnesConnector
     private DateTime? _lastMessageTime;
     private bool _isEnabled;
     private GrpcChannel? _channel;
+    
+    public SniConnector()
+    {
+    }
     
     public SniConnector(ILogger<SniConnector> logger)
     {
@@ -47,7 +51,7 @@ internal class SniConnector : ISnesConnector
         }
 
         _address = address;
-        _logger.LogInformation("Attempting to connect to SNI server at {Address}", _address);
+        _logger?.LogInformation("Attempting to connect to SNI server at {Address}", _address);
         
         _channel = GrpcChannel.ForAddress(new Uri(_address));
         _devices = new Devices.DevicesClient(_channel);
@@ -75,12 +79,12 @@ internal class SniConnector : ISnesConnector
     {
         if (_memory == null)
         {
-            _logger.LogWarning("Attempted to make GetAddress call when not connected");
+            _logger?.LogWarning("Attempted to make GetAddress call when not connected");
             return;
         }
         
         _pendingRequest = request;
-        _logger.LogDebug("Making request to device {Device}", _deviceAddress);
+        _logger?.LogDebug("Making request to device {Device}", _deviceAddress);
         try
         {
             var response = await _memory.SingleReadAsync(new SingleReadMemoryRequest()
@@ -90,7 +94,7 @@ internal class SniConnector : ISnesConnector
                 {
                     RequestAddress = (uint)TranslateAddress(request),
                     RequestAddressSpace = AddressSpace.FxPakPro,
-                    RequestMemoryMapping = MemoryMapping.ExHiRom,
+                    RequestMemoryMapping = request.SniMemoryMapping,
                     Size = (uint)request.Length
                 }
             }, new CallOptions(deadline: DateTime.UtcNow.AddSeconds(3)));
@@ -107,7 +111,7 @@ internal class SniConnector : ISnesConnector
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Unable to send message to SNI");
+            _logger?.LogError(e, "Unable to send message to SNI");
             _ = MarkAsDisconnected();
         }
     }
@@ -116,7 +120,7 @@ internal class SniConnector : ISnesConnector
     {
         if (_memory == null || request.Data == null)
         {
-            _logger.LogWarning("Invalid PutAddress request");
+            _logger?.LogWarning("Invalid PutAddress request");
             return;
         }
 
@@ -129,14 +133,14 @@ internal class SniConnector : ISnesConnector
                 {
                     RequestAddress = (uint)TranslateAddress(request),
                     RequestAddressSpace = AddressSpace.FxPakPro,
-                    RequestMemoryMapping = MemoryMapping.ExHiRom,
+                    RequestMemoryMapping = request.SniMemoryMapping,
                     Data = ByteString.CopyFrom(request.Data.ToArray())
                 }
             }, new CallOptions(deadline: DateTime.UtcNow.AddSeconds(3)));
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Unable to send message to SNI");
+            _logger?.LogError(e, "Unable to send message to SNI");
             _ = MarkAsDisconnected();
         }
         
@@ -150,7 +154,7 @@ internal class SniConnector : ISnesConnector
     {
         if (_devices == null)
         {
-            _logger.LogWarning("SNI Devices is not set");
+            _logger?.LogWarning("SNI Devices is not set");
             return;
         }
 
@@ -164,7 +168,7 @@ internal class SniConnector : ISnesConnector
                 if (response.Devices.Any())
                 {
                     var device = response.Devices.First();
-                    _logger.LogInformation("Connecting to device: {Name}", device.DisplayName);
+                    _logger?.LogInformation("Connecting to device: {Name}", device.DisplayName);
                     _deviceAddress = device.Uri;
                     IsConnected = true;
                     _lastMessageTime = DateTime.Now;
@@ -191,7 +195,7 @@ internal class SniConnector : ISnesConnector
             if (_lastMessageTime != null && (DateTime.Now - _lastMessageTime.Value).TotalSeconds > 10)
             {
                 _ = MarkAsDisconnected();
-                _logger.LogInformation("Disconnected due to no responses");
+                _logger?.LogInformation("Disconnected due to no responses");
                 break;
             }
 

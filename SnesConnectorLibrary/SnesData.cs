@@ -100,7 +100,7 @@ public class SnesData
     public override bool Equals(object? other)
     {
         if (other is not SnesData otherData) return false;
-        return Enumerable.SequenceEqual(otherData._bytes, _bytes);
+        return otherData._bytes.SequenceEqual(_bytes);
     }
     
     /// <summary>

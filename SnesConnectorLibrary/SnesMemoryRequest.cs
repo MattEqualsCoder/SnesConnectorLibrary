@@ -1,3 +1,5 @@
+using SNI;
+
 namespace SnesConnectorLibrary;
 
 /// <summary>
@@ -27,6 +29,11 @@ public class SnesMemoryRequest
     public required SnesMemoryDomain SnesMemoryDomain { get; set; }
     
     /// <summary>
+    /// Memory mapping used by SNI
+    /// </summary>
+    public required MemoryMapping SniMemoryMapping { get; set; }
+    
+    /// <summary>
     /// The bytes to be updated on the SNES, if applicable
     /// </summary>
     public ICollection<byte>? Data { get; set; }
@@ -34,7 +41,7 @@ public class SnesMemoryRequest
     /// <summary>
     /// The address format of the request to use for converting to the proper format for the connector
     /// </summary>
-    public AddressFormat AddressFormat { get; set;  }
+    public required AddressFormat AddressFormat { get; set;  }
     
     /// <summary>
     /// Callback function when data is successfully retrieved from the SNES, if applicable

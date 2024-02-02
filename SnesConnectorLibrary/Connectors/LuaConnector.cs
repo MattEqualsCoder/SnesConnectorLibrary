@@ -6,7 +6,7 @@ namespace SnesConnectorLibrary.Connectors;
 
 internal abstract class LuaConnector : ISnesConnector
 {
-    protected readonly ILogger<LuaConnector> Logger;
+    protected readonly ILogger<LuaConnector>? Logger;
     protected bool IsEnabled;
     protected bool IsBizHawk;
     protected Socket? Socket;
@@ -14,6 +14,10 @@ internal abstract class LuaConnector : ISnesConnector
     private TcpListener? _tcpListener;
     private DateTime? _lastMessageTime;
 
+    protected LuaConnector()
+    {
+    }
+    
     protected LuaConnector(ILogger<LuaConnector> logger)
     {
         Logger = logger;
@@ -73,7 +77,7 @@ internal abstract class LuaConnector : ISnesConnector
 
     protected void MarkConnected()
     {
-        Logger.LogInformation("Connected!");
+        Logger?.LogInformation("Connected!");
         CurrentRequest = null;
         IsConnected = true;
         _lastMessageTime = DateTime.Now;
@@ -161,7 +165,7 @@ internal abstract class LuaConnector : ISnesConnector
     {
         GetAddressAndPort(settings, out var address, out var port);
         
-        Logger.LogInformation("Starting socket server {IP}:{Port}", address.ToString(), port);
+        Logger?.LogInformation("Starting socket server {IP}:{Port}", address.ToString(), port);
 
         _tcpListener = new TcpListener(address, port);
         _tcpListener.Start();
@@ -170,7 +174,7 @@ internal abstract class LuaConnector : ISnesConnector
             try
             {
                 Socket = await _tcpListener.AcceptSocketAsync();
-                Logger.LogInformation("Accepted socket connection");
+                Logger?.LogInformation("Accepted socket connection");
                 if (Socket?.Connected == true)
                 {
                     await using var stream = new NetworkStream(Socket);
@@ -189,12 +193,12 @@ internal abstract class LuaConnector : ISnesConnector
                             line = await ReadNextLine(reader);
                         }
                             
-                        Logger.LogInformation("Socket disconnected");
+                        Logger?.LogInformation("Socket disconnected");
                         MarkAsDisconnected();
                     }
                     catch (Exception e)
                     {
-                        Logger.LogWarning(e, "Error with socket connection");
+                        Logger?.LogWarning(e, "Error with socket connection");
                         MarkAsDisconnected();
                     }
                 }
@@ -203,7 +207,7 @@ internal abstract class LuaConnector : ISnesConnector
             {
                 if (IsEnabled)
                 {
-                    Logger.LogWarning(e, "Error with socket connection");
+                    Logger?.LogWarning(e, "Error with socket connection");
                 }
             }
             
@@ -218,7 +222,6 @@ internal abstract class LuaConnector : ISnesConnector
             if (Socket != null && _lastMessageTime != null && (DateTime.Now - _lastMessageTime.Value).TotalSeconds > 5)
             {
                 MarkAsDisconnected();
-                Socket.Close();
                 Socket = null;
             }
 
