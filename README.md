@@ -39,13 +39,22 @@ var snesConnectorService = ISnesConnectorService.CreateService();
 
 Connecting is as simple as calling the SNES Connector Service's Connect method. You can either pass it just the SnesConnectorType desired, or pass in an SnesConnectorSettings object. By using the SnesConnectorSettings object, you can allow people to change the IP addresses used by the connectors. This can be useful for users who may have it changed for whatever reason (like me!)
 
-The types of connectors are as follows. Only one connector can be used as a single time, but any or all of them can be used as options for your users.
+The types of connectors are as follows. Only one connector can be used as a single time, but any or all of them can be used as options for your users. Note that there are multiple types of Lua connectors because each one works slightly differently and uses different ports. If a user is using multiple Lua scripts simultaneously (say for a tracker and crowd control), then it's imperitive that they use different ports. Because of this, there are multiple Lua script connectors available.
 
 - **SnesConnectorType.Usb2Snes**: Connector for the [QUSB2SNES application](https://skarsnik.github.io/QUsb2snes/). A cross platform application that can be used to communicate to various hardware and emulators via a socket connection. This or SNI are the suggested methods of connecting.
 - **SnesConnectorType.Sni**: Connector for the [SNI application](https://github.com/alttpo/sni), a cross platform gRPC application that can be used to communicate to various hardware and emulators via a gRPC connection. This or QUSB2SNES are the suggested methods of connecting.
 - **SnesConnectorType.Lua**: Connector that can be used for [snes9x-rr](https://github.com/gocha/snes9x-rr) and [BizHawk](https://tasvideos.org/Bizhawk) by loading up the provided Lua script in them. This Lua script uses a unique port from the Emo Tracker and Crowd Control Lua scripts, so if users are using your application alongside them, then this is recommended over the other Lua connectors.
 - **SnesConnectorType.LuaEmoTracker**: Connector that uses the Lua script provided with [EmoTracker](https://emotracker.net/). Including this as an option can be useful for trackers where users may use EmoTracker for other games/events so that they don't have to switch Lua scripts.
 - **SNesConnectorType.LuaCrowdControl**: Similar to the LuaEmoTracker, only it uses the Lua script provided with [Crowd Control](https://crowdcontrol.live/).
+
+### Creating Lua Scripts
+
+The SNES Connector Library includes Lua scripts to be used for the connector type SnesConnectorType.Lua. You will need to make those Lua scripts available and direct the user to them to use for snes9x-rr and BizHawk. You can create the Lua scripts using the Snes Connector Service CreateLuaScriptsFolder method, like the following:
+
+```
+var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SnesLua")
+_snesConnectorService.CreateLuaScriptsFolder(path);
+```
 
 ## Making Requests
 
