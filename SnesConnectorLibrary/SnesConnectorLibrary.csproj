@@ -11,6 +11,8 @@
         <Description>Library for connecting to the various methods of interacting with the SNES, including SNI, QUSB2SNES, and Lua scripts.</Description>
         <PackageProjectUrl>https://github.com/MattEqualsCoder/SnesConnectorLibrary</PackageProjectUrl>
         <RepositoryUrl>https://github.com/MattEqualsCoder/SnesConnectorLibrary</RepositoryUrl>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -48,6 +50,17 @@
       <EmbeddedResource Include="Lua\x64\socket-windows-5-1.dll" />
       <None Remove="Lua\x64\socket-windows-5-4.dll" />
       <EmbeddedResource Include="Lua\x64\socket-windows-5-4.dll" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="..\LICENSE">
+        <Pack>True</Pack>
+        <PackagePath>\</PackagePath>
+      </None>
+      <None Include="..\README.md">
+        <Pack>True</Pack>
+        <PackagePath>\</PackagePath>
+      </None>
     </ItemGroup>
 
 </Project>
