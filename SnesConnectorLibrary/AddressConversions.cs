@@ -50,9 +50,9 @@ internal static class AddressConversions
     {
         switch (domain)
         {
-            case SnesMemoryDomain.Memory:
+            case SnesMemoryDomain.ConsoleRAM:
                 return address - 0x7E0000;
-            case SnesMemoryDomain.Save:
+            case SnesMemoryDomain.CartridgeSave:
                 address -= 0xa06000;
                 return (address / 0x010000) * 0x002000 + (address % 0x010000);
             default:
@@ -64,8 +64,8 @@ internal static class AddressConversions
     {
         return domain switch
         {
-            SnesMemoryDomain.Memory => ConvertFromSnes9xToBizHawk(address, domain) + 0xF50000,
-            SnesMemoryDomain.Save => ConvertFromSnes9xToBizHawk(address, domain) + 0xE00000,
+            SnesMemoryDomain.ConsoleRAM => ConvertFromSnes9xToBizHawk(address, domain) + 0xF50000,
+            SnesMemoryDomain.CartridgeSave => ConvertFromSnes9xToBizHawk(address, domain) + 0xE00000,
             _ => address
         };
     }
@@ -74,8 +74,8 @@ internal static class AddressConversions
     {
         return domain switch
         {
-            SnesMemoryDomain.Memory => address + 0x7E0000,
-            SnesMemoryDomain.Save => (address / 0x002000) * 0x010000 + (address % 0x002000) + 0x006000 + 0xA00000,
+            SnesMemoryDomain.ConsoleRAM => address + 0x7E0000,
+            SnesMemoryDomain.CartridgeSave => (address / 0x002000) * 0x010000 + (address % 0x002000) + 0x006000 + 0xA00000,
             _ => address
         };
     }
@@ -84,8 +84,8 @@ internal static class AddressConversions
     {
         return domain switch
         {
-            SnesMemoryDomain.Memory => address + 0xF50000,
-            SnesMemoryDomain.Save => address + 0xE00000,
+            SnesMemoryDomain.ConsoleRAM => address + 0xF50000,
+            SnesMemoryDomain.CartridgeSave => address + 0xE00000,
             _ => address
         };
     }
@@ -94,9 +94,9 @@ internal static class AddressConversions
     {
         switch (domain)
         {
-            case SnesMemoryDomain.Memory:
+            case SnesMemoryDomain.ConsoleRAM:
                 return address - 0x770000;
-            case SnesMemoryDomain.Save:
+            case SnesMemoryDomain.CartridgeSave:
                 address -= 0xE00000;
                 return (address / 0x002000) * 0x010000 + (address % 0x002000) + 0x006000 + 0xA00000;
             default:
@@ -108,8 +108,8 @@ internal static class AddressConversions
     {
         return domain switch
         {
-            SnesMemoryDomain.Memory => address - 0xF50000,
-            SnesMemoryDomain.Save => address - 0xE00000,
+            SnesMemoryDomain.ConsoleRAM => address - 0xF50000,
+            SnesMemoryDomain.CartridgeSave => address - 0xE00000,
             _ => address
         };
     }

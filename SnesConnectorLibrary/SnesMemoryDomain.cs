@@ -8,12 +8,12 @@ public enum SnesMemoryDomain
     /// <summary>
     /// The SNES Console RAM (WRAM)
     /// </summary>
-    Memory,
+    ConsoleRAM,
     
     /// <summary>
     /// The cartridge save RAM (SRAM/CartRAM)
     /// </summary>
-    Save,
+    CartridgeSave,
     
     /// <summary>
     /// The actual ROM of the game (CartROM)

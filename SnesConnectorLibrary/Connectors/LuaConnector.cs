@@ -97,9 +97,9 @@ internal abstract class LuaConnector : ISnesConnector
     {
         switch (domain)
         {
-            case SnesMemoryDomain.Memory:
+            case SnesMemoryDomain.ConsoleRAM:
                 return "WRAM";
-            case SnesMemoryDomain.Save:
+            case SnesMemoryDomain.CartridgeSave:
                 return "CARTRAM";
             case SnesMemoryDomain.Rom:
                 return "CARTROM";

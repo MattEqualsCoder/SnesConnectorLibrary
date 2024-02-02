@@ -279,7 +279,7 @@ internal class Usb2SnesConnector : ISnesConnector
             RequestType = SnesMemoryRequestType.Retrieve,
             Address = 0x7e0020,
             Length = 1,
-            SnesMemoryDomain = SnesMemoryDomain.Memory,
+            SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
             AddressFormat = AddressFormat.Snes9x,
             SniMemoryMapping = MemoryMapping.Unknown
         });

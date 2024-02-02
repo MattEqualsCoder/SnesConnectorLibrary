@@ -37,7 +37,7 @@ public partial class MainWindow : Window
         _snesConnectorService.AddRecurringRequest(new SnesRecurringMemoryRequest()
         {
             RequestType = SnesMemoryRequestType.Retrieve, 
-            SnesMemoryDomain = SnesMemoryDomain.Save,
+            SnesMemoryDomain = SnesMemoryDomain.CartridgeSave,
             AddressFormat = AddressFormat.Snes9x,
             SniMemoryMapping = MemoryMapping.ExHiRom,
             Address = 0xA173FE,
@@ -53,7 +53,7 @@ public partial class MainWindow : Window
         _snesConnectorService.AddRecurringRequest(new SnesRecurringMemoryRequest()
         {
             RequestType = SnesMemoryRequestType.Retrieve, 
-            SnesMemoryDomain = SnesMemoryDomain.Memory,
+            SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
             AddressFormat = AddressFormat.Snes9x,
             SniMemoryMapping = MemoryMapping.ExHiRom,
             Address = 0x7E0020,
@@ -71,7 +71,7 @@ public partial class MainWindow : Window
         _snesConnectorService.AddRecurringRequest(new SnesRecurringMemoryRequest()
         {
             RequestType = SnesMemoryRequestType.Retrieve, 
-            SnesMemoryDomain = SnesMemoryDomain.Memory,
+            SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
             AddressFormat = AddressFormat.Snes9x,
             SniMemoryMapping = MemoryMapping.ExHiRom,
             Address = 0x7E0AF6,
@@ -158,7 +158,7 @@ public partial class MainWindow : Window
             _snesConnectorService.MakeRequest(new SnesMemoryRequest()
             {
                 RequestType = SnesMemoryRequestType.Retrieve, 
-                SnesMemoryDomain = SnesMemoryDomain.Memory,
+                SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
                 AddressFormat = AddressFormat.Snes9x,
                 SniMemoryMapping = MemoryMapping.ExHiRom,
                 Address = 0x7E09C4,
@@ -170,7 +170,7 @@ public partial class MainWindow : Window
                     _snesConnectorService.MakeRequest(new SnesMemoryRequest()
                     {
                         RequestType = SnesMemoryRequestType.Update, 
-                        SnesMemoryDomain = SnesMemoryDomain.Memory,
+                        SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
                         AddressFormat = AddressFormat.Snes9x,
                         SniMemoryMapping = MemoryMapping.ExHiRom,
                         Address = 0x7E09C2,
@@ -185,7 +185,7 @@ public partial class MainWindow : Window
             _snesConnectorService.MakeRequest(new SnesMemoryRequest()
             {
                 RequestType = SnesMemoryRequestType.Retrieve, 
-                SnesMemoryDomain = SnesMemoryDomain.Memory,
+                SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
                 AddressFormat = AddressFormat.Snes9x,
                 SniMemoryMapping = MemoryMapping.ExHiRom,
                 Address = 0x7EF36C,
@@ -197,7 +197,7 @@ public partial class MainWindow : Window
                     _snesConnectorService.MakeRequest(new SnesMemoryRequest()
                     {
                         RequestType = SnesMemoryRequestType.Update, 
-                        SnesMemoryDomain = SnesMemoryDomain.Memory,
+                        SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
                         AddressFormat = AddressFormat.Snes9x,
                         SniMemoryMapping = MemoryMapping.ExHiRom,
                         Address = 0x7EF372,
@@ -219,7 +219,7 @@ public partial class MainWindow : Window
         _snesConnectorService.MakeRequest(new SnesMemoryRequest()
         {
             RequestType = SnesMemoryRequestType.Retrieve, 
-            SnesMemoryDomain = SnesMemoryDomain.Save,
+            SnesMemoryDomain = SnesMemoryDomain.CartridgeSave,
             AddressFormat = AddressFormat.Snes9x,
             SniMemoryMapping = MemoryMapping.ExHiRom,
             Address = 0xA26602,
@@ -233,7 +233,7 @@ public partial class MainWindow : Window
                 _snesConnectorService.MakeRequest(new SnesMemoryRequest()
                 {
                     RequestType = SnesMemoryRequestType.Update, 
-                    SnesMemoryDomain = SnesMemoryDomain.Save,
+                    SnesMemoryDomain = SnesMemoryDomain.CartridgeSave,
                     AddressFormat = AddressFormat.Snes9x,
                     SniMemoryMapping = MemoryMapping.ExHiRom,
                     Address = 0xA26000 + giftedItemCount.Value * 4,
@@ -244,7 +244,7 @@ public partial class MainWindow : Window
                 _snesConnectorService.MakeRequest(new SnesMemoryRequest()
                 {
                     RequestType = SnesMemoryRequestType.Update, 
-                    SnesMemoryDomain = SnesMemoryDomain.Save,
+                    SnesMemoryDomain = SnesMemoryDomain.CartridgeSave,
                     AddressFormat = AddressFormat.Snes9x,
                     SniMemoryMapping = MemoryMapping.ExHiRom,
                     Address = 0xA26602,
