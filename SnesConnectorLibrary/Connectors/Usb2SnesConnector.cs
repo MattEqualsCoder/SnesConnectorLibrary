@@ -139,7 +139,7 @@ internal class Usb2SnesConnector : ISnesConnector
                     OnMessage?.Invoke(this, new SnesDataReceivedEventArgs()
                     {
                         Request = request,
-                        Data = new SnesData(request.Address, _bytes.ToArray())
+                        Data = new SnesData(_bytes.ToArray())
                     });
                 }
             }

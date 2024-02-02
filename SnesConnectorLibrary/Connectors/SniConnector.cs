@@ -106,7 +106,7 @@ internal class SniConnector : ISnesConnector
             OnMessage?.Invoke(this, new SnesDataReceivedEventArgs()
             {
                 Request = request,
-                Data = new SnesData(request.Address, bytes)
+                Data = new SnesData(bytes)
             });
         }
         catch (Exception e)

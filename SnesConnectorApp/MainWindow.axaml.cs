@@ -45,7 +45,7 @@ public partial class MainWindow : Window
             FrequencySeconds = 0.5,
             OnResponse = data =>
             {
-                _model.CurrentGame = data.ReadUInt8(0xA173FE) == 0xFF ? "Super Metroid" : "A Link to the Past";
+                _model.CurrentGame = data.ReadUInt8(0) == 0xFF ? "Super Metroid" : "A Link to the Past";
             },
         });
         
@@ -62,7 +62,7 @@ public partial class MainWindow : Window
             RespondOnChangeOnly = true,
             OnResponse = data =>
             {
-                _model.Position = $"({data.ReadUInt16(0x7E0022)}, {data.ReadUInt16(0x7E0020)})";
+                _model.Position = $"({data.ReadUInt16(2)}, {data.ReadUInt16(0)})";
             },
             Filter = () => _model.CurrentGame == "A Link to the Past"
         });
@@ -80,7 +80,7 @@ public partial class MainWindow : Window
             RespondOnChangeOnly = true,
             OnResponse = data =>
             {
-                _model.Position = $"({data.ReadUInt16(0x7E0AF6)}, {data.ReadUInt16(0x7E0AFA)})";
+                _model.Position = $"({data.ReadUInt16(0)}, {data.ReadUInt16(4)})";
             },
             Filter = () => _model.CurrentGame == "Super Metroid"
         });
@@ -165,7 +165,7 @@ public partial class MainWindow : Window
                 Length = 2,
                 OnResponse = data =>
                 {
-                    var maxEnergy = data.ReadUInt16(0x7E09C4);
+                    var maxEnergy = data.ReadUInt16(0);
                     if (maxEnergy == null) return;
                     _snesConnectorService.MakeRequest(new SnesMemoryRequest()
                     {
@@ -192,7 +192,7 @@ public partial class MainWindow : Window
                 Length = 1,
                 OnResponse = data =>
                 {
-                    var maxHealth = data.ReadUInt8(0x7EF36C);
+                    var maxHealth = data.ReadUInt8(0);
                     if (maxHealth == null) return;
                     _snesConnectorService.MakeRequest(new SnesMemoryRequest()
                     {
@@ -226,7 +226,7 @@ public partial class MainWindow : Window
             Length = 2,
             OnResponse = data =>
             {
-                var giftedItemCount = data.ReadUInt16(0xA26602);
+                var giftedItemCount = data.ReadUInt16(0);
                 if (giftedItemCount == null) return;
                 
                 // Give the player the item from "player 0"

@@ -62,11 +62,11 @@ internal abstract class LuaConnector : ISnesConnector
     
     public bool CanMakeRequest => IsConnected && CurrentRequest == null && Socket?.Connected == true;
     
-    public abstract AddressFormat TargetAddressFormat { get; }
-
     public int TranslateAddress(SnesMemoryRequest request) =>
         request.GetTranslatedAddress(TargetAddressFormat);
-
+    
+    protected abstract AddressFormat TargetAddressFormat { get; }
+    
     protected abstract int GetDefaultPort();
     
     protected abstract Task SendInitialMessage();
@@ -89,7 +89,7 @@ internal abstract class LuaConnector : ISnesConnector
         OnMessage?.Invoke(this, new SnesDataReceivedEventArgs()
         {
             Request = request,
-            Data = new SnesData(request.Address, data)
+            Data = new SnesData(data)
         });
     }
 

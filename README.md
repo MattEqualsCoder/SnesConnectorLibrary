@@ -167,25 +167,7 @@ There are three different address formats that can be used which are outlined be
 
 The SnesData object is a wrapper around the bytes returned from a retrieval request. It's got multiple functions which can be called to retrieve and check the data that was received.
 
-- **ReadUInt8** - Returns a byte from the SNES data. By default, you can enter the exact memory address similar to what you looked up, but if you set isRaw = true, then you'll want to enter the offset from the address requested. And example is below.
-
-    ```
-    _snesConnectorService.MakeRequest(new SnesMemoryRequest()
-    {
-        RequestType = SnesMemoryRequestType.Update, 
-        SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
-        SniMemoryMapping = MemoryMapping.ExHiRom,
-        AddressFormat = AddressFormat.Snes9x,
-        Address = 0x7E09C2,
-        Length = 2,
-        OnResponse = data =>
-        {
-            // The below will return the same value
-            Console.WriteLine(data.ReadUInt16(0x7E09C2));
-            Console.WriteLine(data.ReadUInt16(0, true));
-        }
-    });
-    ```
+- **ReadUInt8** - Returns a byte from the SNES data. You pass in the address offset location from the initial memory address requested from the connector. For example, if you requested 4 bytes starting at 0x7E0000 and want the 3rd byte, you'd call ReadUInt8(3).
 - **CheckUInt8Flag** - Checks if the binary flag matches the byte at the location
 - **ReadUInt16** - Returns a 16 bit unsigned integer from two bytes.
 - **CheckInt16Flag** - Checks if a binary flag matches the two bytes at the location
