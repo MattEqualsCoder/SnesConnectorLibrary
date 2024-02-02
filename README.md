@@ -10,7 +10,7 @@ The following was tested as part of the creation of this library:
 
 ## Installation
 
-Add the MattEqualsCoder.SNESConnectorLibrary nuget package to your project.
+Add the MattEqualsCoder.SNESConnectorLibrary nuget package to your project: https://www.nuget.org/packages/MattEqualsCoder.SnesConnectorLibrary/0.1.0
 
 ## Instantiating ISnesConnectorService
 
