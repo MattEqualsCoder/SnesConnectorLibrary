@@ -194,3 +194,17 @@ The SnesData object is a wrapper around the bytes returned from a retrieval requ
 ## Snes Connector App
 
 The SNES Connector App is a very simple cross platform UI app that can be used as an example of how to request and update different types of memory.
+
+## Known Connector Issues
+
+As of this moment, there are a few known limitations for some connectors due to downstream services.
+
+- SNI and RetroArch on Linux have issues when SNI loses a connection to RetroArch either from restarting the application or when RetroArch creates a new process after selecting a rom.
+- QUSB2SNES is unable to write to the Console RAM / WRAM.
+
+## Credits
+
+- Skarsnik for QUsb2Snes
+- jsd1982 for SNI
+- Berserker, jsd1982, zig, and others for Lua scripts that I used to flesh out the Lua scripts in this repo
+- EmoTracker creators as when I originally dug into memory reading, it was based on some of the provided scripts in it.

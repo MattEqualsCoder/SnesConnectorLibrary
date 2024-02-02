@@ -188,8 +188,6 @@ internal class Usb2SnesConnector : ISnesConnector
         var address = TranslateAddress(request).ToString("X");
         var length = request.Data.Count.ToString("X");
         
-        _logger?.LogInformation("PutAddress Send");
-        
         await _client.SendInstant(JsonSerializer.Serialize(new Usb2SnesRequest()
         {
             Opcode = "PutAddress",
@@ -272,7 +270,7 @@ internal class Usb2SnesConnector : ISnesConnector
             return;
         }
         
-        await Task.Delay(TimeSpan.FromMilliseconds(3000));
+        await Task.Delay(TimeSpan.FromSeconds(1));
         
         await GetAddress(new SnesMemoryRequest()
         {
