@@ -76,7 +76,7 @@ _snesConnectorService.MakeRequest(new SnesMemoryRequest()
     Length = 2,
     OnResponse = data =>
     {
-        Console.WriteLine(data.ReadUInt16(0x7E09C2));
+        Console.WriteLine(data.ReadUInt16(0));
     }
 });
 
