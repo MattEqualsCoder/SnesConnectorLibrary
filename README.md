@@ -193,7 +193,9 @@ The SnesData object is a wrapper around the bytes returned from a retrieval requ
 
 ## Snes Connector App
 
-The SNES Connector App is a very simple cross platform UI app that can be used as an example of how to request and update different types of memory.
+The SNES Connector App is a very simple cross platform UI app that can be used as an example of how to request and update different types of memory. This was made with [the SMZ3 Cas' fork]() in mind, but I believe it should work with mainline SMZ3 as well. It'll display the rom game title, determine whether you're in Metroid or Zelda, and get either Link's or Samus's X, Y coordinates depending on the current game. There are a couple buttons that can be used to either refill your hearts/energy or give you 20 rupee items.
+
+![image](https://github.com/MattEqualsCoder/SnesConnectorLibrary/assets/63823784/a47c20c5-5b73-4126-823d-488e1877a884)
 
 ## Known Connector Issues
 
