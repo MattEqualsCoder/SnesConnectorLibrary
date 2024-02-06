@@ -1,11 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PackageId>MattEqualsCoder.SnesConnectorLibrary</PackageId>
-        <Version>0.1.1</Version>
+        <Version>0.1.2</Version>
         <Title>SNES Connector Library</Title>
         <Authors>MattEqualsCoder</Authors>
         <Description>Library for connecting to the various methods of interacting with the SNES, including SNI, QUSB2SNES, and Lua scripts.</Description>
@@ -14,6 +13,7 @@
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
