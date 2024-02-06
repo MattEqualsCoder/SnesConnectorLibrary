@@ -66,7 +66,7 @@ You can make a single memory retrieval or update request using the SNES Connecto
 
 ```
 // Makes a single request to retrieve 2 bytes from the WRAM location 0x7E09C2
-_snesConnectorService.MakeRequest(new SnesMemoryRequest()
+_snesConnectorService.MakeRequest(new SnesSingleMemoryRequest()
 {
     RequestType = SnesMemoryRequestType.Update, 
     SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
@@ -81,7 +81,7 @@ _snesConnectorService.MakeRequest(new SnesMemoryRequest()
 });
 
 // Makes a single request to update the WRAM location 0x7E09C2
-_snesConnectorService.MakeRequest(new SnesMemoryRequest()
+_snesConnectorService.MakeRequest(new SnesSingleMemoryRequest()
 {
     RequestType = SnesMemoryRequestType.Update, 
     SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
@@ -105,13 +105,12 @@ The fields are as follows:
 
 ### Recurring Requests
 
-You can make recurring requests that will repeat at certain intervals using the SNES Connector Service AddRecurringRequest method.
+You can make recurring requests that will retrieve data at certain intervals using the SNES Connector Service AddRecurringRequest method. Recurring requests cannot update data.
 
 ```
 // Get the rom title from the ROM data
 var request = _snesConnectorService.AddRecurringRequest(new SnesRecurringMemoryRequest()
 {
-    RequestType = SnesMemoryRequestType.Retrieve, 
     SnesMemoryDomain = SnesMemoryDomain.Rom,
     SniMemoryMapping = MemoryMapping.ExHiRom,
     AddressFormat = AddressFormat.Snes9x,
@@ -127,13 +126,15 @@ var request = _snesConnectorService.AddRecurringRequest(new SnesRecurringMemoryR
 });
 ```
 
-The fields are the same as SnesMemoryRequest, only with the following fields added:
+The fields are the same as SnesSingleMemoryRequest, only without the RequestType and with the following fields added:
 
 - **FrequencySeconds**: How frequently the memory should be polled from the connector.
 - **RespondOnChangeOnly**: For retrievals only. Only calls the OnResponse call back if the values retrieved from the SNES connector have changed since the previous call.
 - **Filter**: If provided, this will be called to see if the request should be made or not.
 
 If requests ever need to be removed and not called anymore, you can call the SNES Connector Service RemoveRecurringRequest method, passing in the request object passed into (or returned by) the AddRecurringRequest method.
+
+Note that if you make multiple recurring requests for the same memory address, to prevent duplicate calls out to the connector, the calls are combined into a single request to the connector. For the frequency, it'll use the time of the fastest request and it'll grab the bytes needed for the largest request. However, the callbacks are still only called when they are applicable.
 
 ### Address Formats
 

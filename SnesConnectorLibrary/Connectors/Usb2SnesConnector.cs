@@ -272,7 +272,7 @@ internal class Usb2SnesConnector : ISnesConnector
         
         await Task.Delay(TimeSpan.FromSeconds(1));
         
-        await GetAddress(new SnesMemoryRequest()
+        await GetAddress(new SnesSingleMemoryRequest()
         {
             RequestType = SnesMemoryRequestType.Retrieve,
             Address = 0x7e0020,

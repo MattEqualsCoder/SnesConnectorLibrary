@@ -9,7 +9,7 @@ internal class SnesConnectorService : ISnesConnectorService
     private readonly ILogger<SnesConnectorService>? _logger;
     private readonly Dictionary<SnesConnectorType, ISnesConnector> _connectors = new();
     private readonly List<SnesMemoryRequest> _queue = new();
-    private readonly List<SnesRecurringMemoryRequest> _recurringRequests = new();
+    private readonly Dictionary<string, RecurringRequestList> _recurringRequests = new();
     private ISnesConnector? _currentConnector;
     private SnesConnectorType _currentConnectorType;
     private Dictionary<string, SnesData> _previousRequestData = new();
@@ -80,7 +80,7 @@ internal class SnesConnectorService : ISnesConnectorService
         GC.SuppressFinalize(this);
     }
 
-    public void MakeRequest(SnesMemoryRequest request)
+    public void MakeRequest(SnesSingleMemoryRequest request)
     {
         if (_currentConnector?.IsConnected != true)
         {
@@ -92,13 +92,25 @@ internal class SnesConnectorService : ISnesConnectorService
     
     public SnesRecurringMemoryRequest AddRecurringRequest(SnesRecurringMemoryRequest request)
     {
-        _recurringRequests.Add(request);
+        if (_recurringRequests.TryGetValue(request.Key, out var recurringRequest))
+        {
+            recurringRequest.AddRequest(request);
+        }
+        else
+        {
+            _recurringRequests.Add(request.Key, new RecurringRequestList(request));
+        }
         return request;
     }
 
     public void RemoveRecurringRequest(SnesRecurringMemoryRequest request)
     {
-        _recurringRequests.Remove(request);
+        if (!_recurringRequests.TryGetValue(request.Key, out var recurringRequest)) return;
+        recurringRequest.RemoveRequest(request, out var isNowEmpty);
+        if (isNowEmpty)
+        {
+            _recurringRequests.Remove(request.Key);
+        }
     }
 
     public bool CreateLuaScriptsFolder(string folder)
@@ -163,20 +175,34 @@ internal class SnesConnectorService : ISnesConnectorService
     {
         if (e.Request is SnesRecurringMemoryRequest recurringRequest)
         {
+            var key = recurringRequest.Key;
             recurringRequest.LastRunTime = DateTime.Now;
-
-            if (recurringRequest.RespondOnChangeOnly)
+                
+            if (_recurringRequests.TryGetValue(recurringRequest.Key, out var recurringRequestList))
             {
-                var key = recurringRequest.Key;
-                if (_previousRequestData.TryGetValue(key, out var prevRequest) && prevRequest.Equals(e.Data))
+                var dataChanged = _previousRequestData.TryGetValue(key, out var prevRequest) &&
+                                  !prevRequest.Equals(e.Data);
+                    
+                foreach (var request in recurringRequestList.Requests)
                 {
-                    return;
+                    if (!request.CanRun) continue;
+                    
+                    request.LastRunTime = DateTime.Now;
+                        
+                    if (!recurringRequest.RespondOnChangeOnly || dataChanged)
+                    {
+                        request.OnResponse?.Invoke(e.Data);
+                    }
                 }
-                _previousRequestData[key] = e.Data;
+                
+                _previousRequestData[recurringRequestList.MainRequest.Key] = e.Data;
             }
         }
+        else
+        {
+            e.Request.OnResponse?.Invoke(e.Data); 
+        }
         
-        e.Request.OnResponse?.Invoke(e.Data);
         OnMessage?.Invoke(sender, e);
     }
 
@@ -207,10 +233,10 @@ internal class SnesConnectorService : ISnesConnectorService
                 }
                 else if (_recurringRequests.Any())
                 {
-                    var request = _recurringRequests.Where(x => x.CanRun).MinBy(x => x.NextRunTime);
+                    var request = _recurringRequests.Values.Where(x => x.MainRequest.CanRun).MinBy(x => x.MainRequest.NextRunTime);
                     if (request != null)
                     {
-                        await ProcessRequest(request);
+                        await ProcessRequest(request.MainRequest);
                     }
                 }
             }
@@ -237,5 +263,49 @@ internal class SnesConnectorService : ISnesConnectorService
             await _currentConnector!.PutAddress(request);
         }
 
+    }
+
+    private class RecurringRequestList
+    {
+        public SnesRecurringMemoryRequest MainRequest { get; private set; } = null!;
+        
+        public List<SnesRecurringMemoryRequest> Requests { get; } = new();
+
+        private void SetMainRequest()
+        {
+            MainRequest = new SnesRecurringMemoryRequest()
+            {
+                Address = Requests.First().Address,
+                AddressFormat = Requests.First().AddressFormat,
+                SnesMemoryDomain = Requests.First().SnesMemoryDomain,
+                SniMemoryMapping = Requests.First().SniMemoryMapping,
+                FrequencySeconds = Requests.Min(x => x.FrequencySeconds),
+                Length = Requests.Max(x => x.Length)
+            };
+        }
+
+        public RecurringRequestList(SnesRecurringMemoryRequest request)
+        {
+            Requests.Add(request);
+            SetMainRequest();
+        }
+        
+        public void AddRequest(SnesRecurringMemoryRequest request)
+        {
+            Requests.Add(request);
+            SetMainRequest();
+        }
+
+        public void RemoveRequest(SnesRecurringMemoryRequest request, out bool isNowEmpty)
+        {
+            Requests.Remove(request);
+            if (Requests.Count == 0)
+            {
+                isNowEmpty = true;
+                return;
+            }
+            SetMainRequest();
+            isNowEmpty = false;
+        }
     }
 }
