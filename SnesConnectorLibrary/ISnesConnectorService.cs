@@ -55,7 +55,7 @@ public interface ISnesConnectorService : IDisposable
     /// Makes a single request to either GET or PUT memory to the SNES via the active connector
     /// </summary>
     /// <param name="request">The request to make to the SNES</param>
-    public void MakeRequest(SnesMemoryRequest request);
+    public void MakeRequest(SnesSingleMemoryRequest request);
 
     /// <summary>
     /// Makes a recurring scheduled request to the SNES via the active connector

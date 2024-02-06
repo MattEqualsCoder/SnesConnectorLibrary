@@ -5,6 +5,7 @@ using System.Text;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Microsoft.VisualBasic.FileIO;
+using Serilog;
 using SnesConnectorLibrary;
 using SNI;
 
@@ -36,7 +37,6 @@ public partial class MainWindow : Window
         // Retrieve whether the player is currently in Super Metroid or A Link to the Past from SRAM
         _snesConnectorService.AddRecurringRequest(new SnesRecurringMemoryRequest()
         {
-            RequestType = SnesMemoryRequestType.Retrieve, 
             SnesMemoryDomain = SnesMemoryDomain.CartridgeSave,
             AddressFormat = AddressFormat.Snes9x,
             SniMemoryMapping = MemoryMapping.ExHiRom,
@@ -52,7 +52,6 @@ public partial class MainWindow : Window
         // If in ALttP, get the player's X,Y coordinates from WRAM
         _snesConnectorService.AddRecurringRequest(new SnesRecurringMemoryRequest()
         {
-            RequestType = SnesMemoryRequestType.Retrieve, 
             SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
             AddressFormat = AddressFormat.Snes9x,
             SniMemoryMapping = MemoryMapping.ExHiRom,
@@ -70,7 +69,6 @@ public partial class MainWindow : Window
         // If in SM, get the player's X,Y coordinates from WRAM
         _snesConnectorService.AddRecurringRequest(new SnesRecurringMemoryRequest()
         {
-            RequestType = SnesMemoryRequestType.Retrieve, 
             SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
             AddressFormat = AddressFormat.Snes9x,
             SniMemoryMapping = MemoryMapping.ExHiRom,
@@ -88,7 +86,6 @@ public partial class MainWindow : Window
         // Get the rom title from the ROM data
         _snesConnectorService.AddRecurringRequest(new SnesRecurringMemoryRequest()
         {
-            RequestType = SnesMemoryRequestType.Retrieve, 
             SnesMemoryDomain = SnesMemoryDomain.Rom,
             AddressFormat = AddressFormat.Snes9x,
             SniMemoryMapping = MemoryMapping.ExHiRom,
@@ -155,7 +152,7 @@ public partial class MainWindow : Window
         if (_model.CurrentGame == "Super Metroid")
         {
             // Request the max energy, then set the player's energy to its value
-            _snesConnectorService.MakeRequest(new SnesMemoryRequest()
+            _snesConnectorService.MakeRequest(new SnesSingleMemoryRequest()
             {
                 RequestType = SnesMemoryRequestType.Retrieve, 
                 SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
@@ -167,7 +164,7 @@ public partial class MainWindow : Window
                 {
                     var maxEnergy = data.ReadUInt16(0);
                     if (maxEnergy == null) return;
-                    _snesConnectorService.MakeRequest(new SnesMemoryRequest()
+                    _snesConnectorService.MakeRequest(new SnesSingleMemoryRequest()
                     {
                         RequestType = SnesMemoryRequestType.Update, 
                         SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
@@ -182,7 +179,7 @@ public partial class MainWindow : Window
         else
         {
             // Request the max hearts, then set the player's health to its value
-            _snesConnectorService.MakeRequest(new SnesMemoryRequest()
+            _snesConnectorService.MakeRequest(new SnesSingleMemoryRequest()
             {
                 RequestType = SnesMemoryRequestType.Retrieve, 
                 SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
@@ -194,7 +191,7 @@ public partial class MainWindow : Window
                 {
                     var maxHealth = data.ReadUInt8(0);
                     if (maxHealth == null) return;
-                    _snesConnectorService.MakeRequest(new SnesMemoryRequest()
+                    _snesConnectorService.MakeRequest(new SnesSingleMemoryRequest()
                     {
                         RequestType = SnesMemoryRequestType.Update, 
                         SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
@@ -216,7 +213,7 @@ public partial class MainWindow : Window
         }
         
         // Get the number of items previously given the the player, then give them another 20 rupee item
-        _snesConnectorService.MakeRequest(new SnesMemoryRequest()
+        _snesConnectorService.MakeRequest(new SnesSingleMemoryRequest()
         {
             RequestType = SnesMemoryRequestType.Retrieve, 
             SnesMemoryDomain = SnesMemoryDomain.CartridgeSave,
@@ -230,7 +227,7 @@ public partial class MainWindow : Window
                 if (giftedItemCount == null) return;
                 
                 // Give the player the item from "player 0"
-                _snesConnectorService.MakeRequest(new SnesMemoryRequest()
+                _snesConnectorService.MakeRequest(new SnesSingleMemoryRequest()
                 {
                     RequestType = SnesMemoryRequestType.Update, 
                     SnesMemoryDomain = SnesMemoryDomain.CartridgeSave,
@@ -241,7 +238,7 @@ public partial class MainWindow : Window
                 });
                 
                 // Increase the number of gifted items by 1
-                _snesConnectorService.MakeRequest(new SnesMemoryRequest()
+                _snesConnectorService.MakeRequest(new SnesSingleMemoryRequest()
                 {
                     RequestType = SnesMemoryRequestType.Update, 
                     SnesMemoryDomain = SnesMemoryDomain.CartridgeSave,

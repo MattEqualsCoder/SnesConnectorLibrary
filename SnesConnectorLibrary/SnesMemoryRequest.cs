@@ -10,7 +10,7 @@ public class SnesMemoryRequest
     /// <summary>
     /// The type of request (retrieve or update)
     /// </summary>
-    public required SnesMemoryRequestType RequestType { get; set; }
+    public SnesMemoryRequestType RequestType;
     
     /// <summary>
     /// The memory address to retrieve or update. Note that this is in the snes9x memory ranges of WRAM starting at
