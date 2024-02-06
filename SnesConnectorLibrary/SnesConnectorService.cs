@@ -189,7 +189,7 @@ internal class SnesConnectorService : ISnesConnectorService
                     
                     request.LastRunTime = DateTime.Now;
                         
-                    if (!recurringRequest.RespondOnChangeOnly || dataChanged)
+                    if (!request.RespondOnChangeOnly || dataChanged)
                     {
                         request.OnResponse?.Invoke(e.Data);
                     }
