@@ -44,7 +44,7 @@ end
 print("Emulator: " .. emulator.name)
 
 local HOST_ADDRESS = '127.0.0.1'
-local HOST_PORT = 6969
+local HOST_PORT = 21562
 local DISCONNECT_DELAY = 10
 local RECONNECT_DELAY = 5
 
