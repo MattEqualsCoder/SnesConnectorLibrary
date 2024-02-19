@@ -180,7 +180,7 @@ internal class SnesConnectorService : ISnesConnectorService
                 
             if (_recurringRequests.TryGetValue(recurringRequest.Key, out var recurringRequestList))
             {
-                var dataChanged = _previousRequestData.TryGetValue(key, out var prevRequest) &&
+                var dataChanged = !_previousRequestData.TryGetValue(key, out var prevRequest) ||
                                   !prevRequest.Equals(e.Data);
                     
                 foreach (var request in recurringRequestList.Requests)
@@ -188,10 +188,10 @@ internal class SnesConnectorService : ISnesConnectorService
                     if (!request.CanRun) continue;
                     
                     request.LastRunTime = DateTime.Now;
-                        
+                    
                     if (!request.RespondOnChangeOnly || dataChanged)
                     {
-                        request.OnResponse?.Invoke(e.Data);
+                        InvokeRequest(request, e.Data);
                     }
                 }
                 
@@ -200,10 +200,22 @@ internal class SnesConnectorService : ISnesConnectorService
         }
         else
         {
-            e.Request.OnResponse?.Invoke(e.Data); 
+            InvokeRequest(e.Request, e.Data);
         }
         
         OnMessage?.Invoke(sender, e);
+    }
+
+    private void InvokeRequest(SnesMemoryRequest request, SnesData data)
+    {
+        try
+        {
+            request.OnResponse?.Invoke(data);
+        }
+        catch (Exception exception)
+        {
+            _logger?.LogError(exception, "Error while invoking a memory changed event for address {Address} in {Domain}", request.Address.ToString("X6"), request.SnesMemoryDomain.ToString());
+        }
     }
 
     private void CurrentConnectorOnDisconnected(object? sender, EventArgs e)
@@ -215,6 +227,7 @@ internal class SnesConnectorService : ISnesConnectorService
     private void CurrentConnectorOnConnected(object? sender, EventArgs e)
     {
         _logger?.LogInformation("Successfully connected to {Type} connector", _currentConnectorType.ToString());
+        _previousRequestData.Clear();
         _ = ProcessRequests();
         OnConnected?.Invoke(sender, e);
     }
