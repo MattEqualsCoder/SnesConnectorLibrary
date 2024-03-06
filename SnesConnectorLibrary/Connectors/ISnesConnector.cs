@@ -68,13 +68,13 @@ internal interface ISnesConnector : IDisposable
     /// Gets a block of memory from the SNES via the connector
     /// </summary>
     /// <param name="request">The request with the details of the memory to receive</param>
-    public Task GetAddress(SnesMemoryRequest request);
+    public Task RetrieveMemory(SnesMemoryRequest request);
 
     /// <summary>
     /// Sets a block of memory to specific values via the connector
     /// </summary>
     /// <param name="request">The request with the details of the memory to update</param>
-    public Task PutAddress(SnesMemoryRequest request);
+    public Task UpdateMemory(SnesMemoryRequest request);
     
     /// <summary>
     /// If the connector has an active connection with the SNES

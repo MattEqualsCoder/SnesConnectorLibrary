@@ -324,12 +324,12 @@ internal class SnesConnectorService : ISnesConnectorService
             if (memoryRequest.MemoryRequestType == SnesMemoryRequestType.RetrieveMemory)
             {
                 _logger?.LogDebug("{Count} bytes requested from {Domain} address 0x{Address}", memoryRequest.Length, memoryRequest.SnesMemoryDomain.ToString(), memoryRequest.Address.ToString("X") );
-                await _currentConnector!.GetAddress(memoryRequest);    
+                await _currentConnector!.RetrieveMemory(memoryRequest);    
             }
             else
             {
                 _logger?.LogDebug("{Count} bytes being updated on {Domain} address 0x{Address}", memoryRequest.Data?.Count, memoryRequest.SnesMemoryDomain.ToString(), memoryRequest.Address.ToString("X") );
-                await _currentConnector!.PutAddress(memoryRequest);
+                await _currentConnector!.UpdateMemory(memoryRequest);
             }
         }
         else if (request.RequestType == SnesRequestType.GetFileList && request is SnesFileListRequest fileListRequest)
@@ -377,7 +377,7 @@ internal class SnesConnectorService : ISnesConnectorService
 
     private void CurrentConnectorOnFileListReceived(object sender, SnesFileListResponseEventArgs e)
     {
-        _logger?.LogInformation("{Count} files found within {FileName}", e.Files.Count, e.Request.Path);
+        _logger?.LogInformation("{Count} files found within {FileName}", e.Files.Count, e.Request.Path == "" ? "the root directory" : e.Request.Path);
         FileListReceived?.Invoke(sender, e);
         e.Request.OnResponse?.Invoke(e.Files);
     }

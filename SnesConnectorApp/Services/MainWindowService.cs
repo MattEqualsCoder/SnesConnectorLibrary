@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -101,6 +102,8 @@ public class MainWindowService(ILogger<MainWindowService> logger, ISnesConnector
             Model.CurrentGame = "N/A";
             Model.Position = "N/A";
             Model.Title = "N/A";
+            Model.Roms = [];
+            Model.SelectedRom = null;
         };
         
         return Model;
@@ -133,7 +136,6 @@ public class MainWindowService(ILogger<MainWindowService> logger, ISnesConnector
                 Length = 2,
                 OnResponse = data =>
                 {
-                    Console.WriteLine("Data Received");
                     var maxEnergy = data.ReadUInt16(0);
                     if (maxEnergy == null) return;
                     snesConnectorService.MakeMemoryRequest(new SnesSingleMemoryRequest()

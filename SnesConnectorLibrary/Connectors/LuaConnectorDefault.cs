@@ -17,7 +17,7 @@ internal class LuaConnectorDefault : LuaConnector
     {
     }
 
-    public override async Task GetAddress(SnesMemoryRequest request)
+    public override async Task RetrieveMemory(SnesMemoryRequest request)
     {
         CurrentRequest = request;
         await SendRequest(new LuaRequest()
@@ -29,7 +29,7 @@ internal class LuaConnectorDefault : LuaConnector
         });
     }
 
-    public override async Task PutAddress(SnesMemoryRequest request)
+    public override async Task UpdateMemory(SnesMemoryRequest request)
     {
         if (request.Data == null)
         {

@@ -65,9 +65,9 @@ internal abstract class LuaConnector : ISnesConnector
     #region Public methods
     public bool CanMakeRequest(SnesRequest request) => CanProcessRequests && request.CanPerformRequest(SupportedFunctionality);
 
-    public abstract Task GetAddress(SnesMemoryRequest request);
+    public abstract Task RetrieveMemory(SnesMemoryRequest request);
 
-    public abstract Task PutAddress(SnesMemoryRequest request);
+    public abstract Task UpdateMemory(SnesMemoryRequest request);
     
     public void Enable(SnesConnectorSettings settings)
     {

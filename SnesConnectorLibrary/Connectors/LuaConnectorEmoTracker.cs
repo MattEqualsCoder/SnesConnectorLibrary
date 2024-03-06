@@ -18,7 +18,7 @@ internal class LuaConnectorEmoTracker : LuaConnector
     {
     }
     
-     public override async Task GetAddress(SnesMemoryRequest request)
+     public override async Task RetrieveMemory(SnesMemoryRequest request)
     {
         CurrentRequest = request;
         await Send(new EmoTrackerRequest()
@@ -30,7 +30,7 @@ internal class LuaConnectorEmoTracker : LuaConnector
         });
     }
 
-    public override async Task PutAddress(SnesMemoryRequest request)
+    public override async Task UpdateMemory(SnesMemoryRequest request)
     {
         if (request.Data == null)
         {

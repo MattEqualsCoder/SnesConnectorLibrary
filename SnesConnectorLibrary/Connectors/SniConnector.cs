@@ -98,7 +98,7 @@ internal class SniConnector : ISnesConnector
         }
     }
     
-    public async Task GetAddress(SnesMemoryRequest request)
+    public async Task RetrieveMemory(SnesMemoryRequest request)
     {
         if (_memory == null)
         {
@@ -138,7 +138,7 @@ internal class SniConnector : ISnesConnector
         }
     }
 
-    public async Task PutAddress(SnesMemoryRequest request)
+    public async Task UpdateMemory(SnesMemoryRequest request)
     {
         if (_memory == null || request.Data == null)
         {

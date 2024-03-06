@@ -34,6 +34,7 @@ internal class Usb2SnesConnector : ISnesConnector
     private List<SnesFile> _pendingListFolders = new();
     private List<SnesFile> _foundListFiles = new();
     private string _prevInfo = "";
+    private bool _isSd2Snes;
 
     public Usb2SnesConnector()
     {
@@ -117,7 +118,7 @@ internal class Usb2SnesConnector : ISnesConnector
         GC.SuppressFinalize(this);
     }
     
-    public async Task GetAddress(SnesMemoryRequest request)
+    public async Task RetrieveMemory(SnesMemoryRequest request)
     {
         if (_client == null)
         {
@@ -137,7 +138,7 @@ internal class Usb2SnesConnector : ISnesConnector
         });
     }
 
-    public async Task PutAddress(SnesMemoryRequest request)
+    public async Task UpdateMemory(SnesMemoryRequest request)
     {
         if (_client == null)
         {
@@ -150,30 +151,67 @@ internal class Usb2SnesConnector : ISnesConnector
         }
         
         _pendingRequest = request;
-        
-        var address = TranslateAddress(request).ToString("X");
-        var length = request.Data.Count.ToString("X");
 
-        if (!await Send(new Usb2SnesRequest()
+        // If it's not an SNES or if it's to the SRAM, we can just a normal memory PutAddress request
+        if (!_isSd2Snes || request.SnesMemoryDomain != SnesMemoryDomain.ConsoleRAM)
+        {
+            var address = TranslateAddress(request).ToString("X");
+            var length = request.Data.Count.ToString("X");
+
+            if (!await Send(new Usb2SnesRequest
+                {
+                    Opcode = PutAddressOpCode,
+                    Space = "SNES",
+                    Operands = new List<string> { address, length }
+                }))
             {
-                Opcode = PutAddressOpCode,
-                Space = "SNES",
-                Operands = new List<string>() { address, length }
-            }))
-        {
-            return;
-        }
+                return;
+            }
 
-        await Task.Delay(TimeSpan.FromMilliseconds(100));
+            await Task.Delay(TimeSpan.FromMilliseconds(500));
 
-        if (!await Send(request.Data.ToArray()))
-        {
-            return;
+            if (!await Send(request.Data.ToArray()))
+            {
+                return;
+            }
         }
+        // If it's the console RAM, we have to do this via assembly command
+        else
+        {
+            var bytesToSend = new List<byte> { 0x00, 0xE2, 0x20, 0x48, 0xEB, 0x48 };
+
+            var data = request.Data.ToArray();
+            for (var i = 0; i < request.Data.Count; i++)
+            {
+                var address = request.GetTranslatedAddress(AddressFormat.Snes9x) + i;
+                bytesToSend.Add(0xA9); // LDA
+                bytesToSend.Add(data[i]);
+                bytesToSend.Add(0x8F); // STA
+                bytesToSend.AddRange(new List<byte> { (byte)(address & 0xFF), (byte)((address >> 8) & 0xFF), (byte)((address >> 16) & 0xFF) });
+            }
             
-        MemoryUpdated?.Invoke(this, new SnesResponseEventArgs<SnesMemoryRequest>() { Request = request });
+            bytesToSend.AddRange(new List<byte> { 0xA9, 0x00, 0x8F, 0x00, 0x2C, 0x00, 0x68, 0xEB, 0x68, 0x28, 0x6C, 0xEA, 0xFF, 0x08 });
+            
+            if (!await Send(new Usb2SnesRequest
+                {
+                    Opcode = PutAddressOpCode,
+                    Space = "CMD",
+                    Operands = new List<string> { "2C00", (bytesToSend.Count-1).ToString("X"), "2C00", "1" }
+                }))
+            {
+                return;
+            }
 
+            await Task.Delay(TimeSpan.FromMilliseconds(500));
+
+            if (!await Send(bytesToSend.ToArray()))
+            {
+                return;
+            }
+        }
+        
         _pendingRequest = null;
+        MemoryUpdated?.Invoke(this, new SnesResponseEventArgs<SnesMemoryRequest>() { Request = request });
     }
 
     public bool CanMakeRequest(SnesRequest request)
@@ -200,8 +238,7 @@ internal class Usb2SnesConnector : ISnesConnector
     public async Task ListFiles(SnesFileListRequest request)
     {
         _pendingRequest = request;
-        _logger?.LogInformation("Send SNES file list");
-
+        
         var parentFolderName = request.Path;
         if (parentFolderName.Contains('/'))
         {
@@ -272,7 +309,6 @@ internal class Usb2SnesConnector : ISnesConnector
         var chunk = 1;
         while(true)
         {
-            _logger?.LogInformation("Chunk {Num} of {Total}", chunk, numChunks);
             chunk++;
             var numBytes = await stream.ReadAsync(bytes);
             if (numBytes == 0)
@@ -285,8 +321,8 @@ internal class Usb2SnesConnector : ISnesConnector
 
         await Task.Delay(TimeSpan.FromSeconds(5));
         
-        FileUploaded?.Invoke(this, new SnesResponseEventArgs<SnesUploadFileRequest>() { Request = request });
         _pendingRequest = null;
+        FileUploaded?.Invoke(this, new SnesResponseEventArgs<SnesUploadFileRequest>() { Request = request });
     }
 
     public async Task DeleteFile(SnesDeleteFileRequest request)
@@ -303,8 +339,8 @@ internal class Usb2SnesConnector : ISnesConnector
             return;
         }
         
-        FileDeleted?.Invoke(this, new SnesResponseEventArgs<SnesDeleteFileRequest>() { Request = request });
         _pendingRequest = null;
+        FileDeleted?.Invoke(this, new SnesResponseEventArgs<SnesDeleteFileRequest>() { Request = request });
     }
     #endregion
     
@@ -406,8 +442,13 @@ internal class Usb2SnesConnector : ISnesConnector
         }
         
         _logger?.LogInformation("Possible devices: {Devices}", string.Join(", ", response.Results));
-            
-        _logger?.LogInformation("Connecting to USB2SNES device {Device} as {ClientName}", response.Results.First(), _clientName);
+
+        var device = response.Results.First();
+        
+        _isSd2Snes = device.StartsWith("SD2SNES", StringComparison.OrdinalIgnoreCase) ||
+                     (device.Length == 4 && device.StartsWith("COM"));
+        
+        _logger?.LogInformation("Connecting to USB2SNES device {Device} as {ClientName} (IsSd2Snes: {IsSd2Snes})", device, _clientName, _isSd2Snes ? "Yes" : "No");
 
         if (!await Send(new Usb2SnesRequest()
             {
@@ -441,6 +482,8 @@ internal class Usb2SnesConnector : ISnesConnector
         {
             return;
         }
+        
+        _logger?.LogInformation("Requested device info");
     }
 
     private async Task<bool> Send(Usb2SnesRequest request)
@@ -546,7 +589,7 @@ internal class Usb2SnesConnector : ISnesConnector
         
         await Task.Delay(TimeSpan.FromSeconds(1));
         
-        await GetAddress(new SnesSingleMemoryRequest()
+        await RetrieveMemory(new SnesSingleMemoryRequest()
         {
             MemoryRequestType = SnesMemoryRequestType.RetrieveMemory,
             Address = 0x7e0020,
