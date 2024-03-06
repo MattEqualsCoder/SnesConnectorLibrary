@@ -56,45 +56,45 @@ var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Loca
 _snesConnectorService.CreateLuaScriptsFolder(path);
 ```
 
-## Making Requests
+## Memory Requests
 
-There are two functions for making requests, depending on the need. All requests are asynchronous and added to a queue for processing at certain intervals. This is done due to the limitations of some connectors of not working well with multiple requests being sent simultaneously, requiring only request to be pending at a time.
+There are two functions for making memory requests, depending on the need. All requests are asynchronous and added to a queue for processing at certain intervals. This is done due to the limitations of some connectors of not working well with multiple requests being sent simultaneously, requiring only request to be pending at a time.
 
 ### Single Requests
 
-You can make a single memory retrieval or update request using the SNES Connector Service MakeRequest method.
+You can make a single memory retrieval or update request using the SNES Connector Service MakeMemoryRequest method.
 
 ```
-// Makes a single request to retrieve 2 bytes from the WRAM location 0x7E09C2
-_snesConnectorService.MakeRequest(new SnesSingleMemoryRequest()
+// Makes a single request to retrieve 2 bytes from the WRAM location 0x7E09C4
+_snesConnectorService.MakeMemoryRequest(new SnesSingleMemoryRequest()
 {
-    RequestType = SnesMemoryRequestType.Update, 
+    MemoryRequestType = SnesMemoryRequestType.RetrieveMemory, 
     SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
-    SniMemoryMapping = MemoryMapping.ExHiRom,
     AddressFormat = AddressFormat.Snes9x,
-    Address = 0x7E09C2,
+    SniMemoryMapping = MemoryMapping.ExHiRom,
+    Address = 0x7E09C4,
     Length = 2,
     OnResponse = data =>
     {
-        Console.WriteLine(data.ReadUInt16(0));
+        Console.WriteLine("Data Received");
     }
 });
 
 // Makes a single request to update the WRAM location 0x7E09C2
-_snesConnectorService.MakeRequest(new SnesSingleMemoryRequest()
+_snesConnectorService.MakeMemoryRequest(new SnesSingleMemoryRequest()
 {
-    RequestType = SnesMemoryRequestType.Update, 
+    MemoryRequestType = SnesMemoryRequestType.UpdateMemory, 
     SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
-    SniMemoryMapping = MemoryMapping.ExHiRom,
     AddressFormat = AddressFormat.Snes9x,
+    SniMemoryMapping = MemoryMapping.ExHiRom,
     Address = 0x7E09C2,
-    Data =  = new byte[] { 0xFF, 0xA0 }
+    Data = new byte[] { 0xFF, 0xA0 }
 });
 ```
 
 The fields are as follows:
 
-- **RequestType**: Whether this is retrieving or updating memory
+- **MemoryRequestType**: Whether this is retrieving or updating memory
 - **SnesMemoryDomain**: What type of memory is being requested. Either ConsoleRAM (WRAM), CartridgeSave (SRAM), or Rom.
 - **AddressFormat**: The address format used in the request so that the library can convert it to the proper format for the connector type. Can be either Snes9x, BizHawk, or FxPakPro. The differences are explained below.
 - **SniMemoryMapping**: The MemoryMapping for the cart. Required for SNI. Either HiRom, LoRom, ExHiRom, or SA1.
@@ -108,21 +108,21 @@ The fields are as follows:
 You can make recurring requests that will retrieve data at certain intervals using the SNES Connector Service AddRecurringRequest method. Recurring requests cannot update data.
 
 ```
-// Get the rom title from the ROM data
-var request = _snesConnectorService.AddRecurringRequest(new SnesRecurringMemoryRequest()
+// Retrieve whether the player is currently in Super Metroid or A Link to the Past from SRAM
+var request = _snesConnectorService.AddRecurringMemoryRequest(new SnesRecurringMemoryRequest()
 {
-    SnesMemoryDomain = SnesMemoryDomain.Rom,
-    SniMemoryMapping = MemoryMapping.ExHiRom,
+    MemoryRequestType = SnesMemoryRequestType.RetrieveMemory,
+    SnesMemoryDomain = SnesMemoryDomain.CartridgeSave,
     AddressFormat = AddressFormat.Snes9x,
-    Address = 0x00FFC0,
-    Length = 20,
+    SniMemoryMapping = MemoryMapping.ExHiRom,
+    Address = 0xA173FE,
+    Length = 2,
     FrequencySeconds = 0.5,
     RespondOnChangeOnly = true,
     OnResponse = data =>
     {
-        _model.Title = Encoding.ASCII.GetString(data.Raw);
+        Model.CurrentGame = data.ReadUInt8(0) == 0xFF ? "Super Metroid" : "A Link to the Past";
     },
-    Filter = () => _model.CurrentGame == "Super Metroid"
 });
 ```
 
@@ -174,6 +174,82 @@ The SnesData object is a wrapper around the bytes returned from a retrieval requ
 - **CheckInt16Flag** - Checks if a binary flag matches the two bytes at the location
 - **Raw** - This is the raw bytes returned from the connector
 
+## Get File List
+
+```
+// Scan for roms
+snesConnectorService.GetFileList(new SnesFileListRequest()
+{
+    Path = "",
+    Recursive = true,
+    Filter = file => file.Name.EndsWith(".sfc", StringComparison.OrdinalIgnoreCase) || file.Name.EndsWith(".smc", StringComparison.OrdinalIgnoreCase),
+    OnResponse = (files) =>
+    {
+        Model.Roms = files.Select(x => x.FullPath).ToList();
+        Model.SelectedRom = Model.Roms.First();
+        Model.Status = $"{Model.Roms.Count} roms found";
+    }
+});
+```
+
+- **Path** - Starting path to start scanning for files
+- **Recursive** - If subdirectories should be searched
+- **Filter** - Function to call to determine if a file should be returned
+- **OnResponse** - Callback for when the roms are found
+
+## Boot Rom
+
+```
+// Boot rom file
+snesConnectorService.BootRom(new SnesBootRomRequest()
+{
+    Path = "/roms/MyRom.smc",
+    OnComplete = () =>
+    {
+        Console.WriteLine("Booted rom!")
+    }
+});
+```
+
+- **Path** - Path of the rom file to boot
+- **OnResponse** - Callback for when the rom was booted
+
+## Upload File
+
+```
+// Uploads MyRom.smc to the root of the SNES
+snesConnectorService.UploadFile(new SnesUploadFileRequest()
+{
+    LocalFilePath = "C:\MyRom.smc",
+    TargetFilePath = "/roms/MyRom.smc"
+    OnComplete = () =>
+    {
+        Console.WriteLine("Upload of MyRom complete");
+    }
+});
+```
+
+- **LocalFilePath** - Path of the file on the computer to upload
+- **TargetFilePath** - Destination path on the SNES to upload the file to
+- **OnComplete** - Callback for when the file was uploaded
+
+## Delete File
+
+```
+// Deletes MyRom.smc from the root of the SNES
+snesConnectorService.DeleteFile(new SnesDeleteFileRequest()
+{
+    Path = "/roms/MyRom.smc",
+    OnComplete = () =>
+    {
+        Console.WriteLine("MyRom deleted");
+    }
+});
+```
+
+- **Path** - Path of the file to delete
+- **OnComplete** - Callback for when the file was deleted
+
 ## Snes Connector App
 
 The SNES Connector App is a very simple cross platform UI app that can be used as an example of how to request and update different types of memory. This was made with [the SMZ3 Cas' fork](https://github.com/Vivelin/SMZ3Randomizer) in mind, but I believe it should work with mainline SMZ3 as well. It'll display the rom game title, determine whether you're in Metroid or Zelda, and get either Link's or Samus's X, Y coordinates depending on the current game. There are a couple buttons that can be used to either refill your hearts/energy or give you 20 rupee items.
@@ -185,7 +261,8 @@ The SNES Connector App is a very simple cross platform UI app that can be used a
 As of this moment, there are a few known limitations for some connectors due to downstream services.
 
 - SNI and RetroArch on Linux have issues when SNI loses a connection to RetroArch either from restarting the application or when RetroArch creates a new process after selecting a rom.
-- QUSB2SNES is unable to write to the Console RAM / WRAM.
+- SNI can't properly determine and return the Console ROM functionality, so that functionality is turned off with the SNI connector.
+- Snes9x is unable to write to the Console ROM.
 
 ## Credits
 

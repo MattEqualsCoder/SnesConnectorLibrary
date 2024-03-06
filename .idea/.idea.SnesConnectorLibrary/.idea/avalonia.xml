@@ -5,6 +5,7 @@
       <map>
         <entry key="SnesConnectorApp/App.axaml" value="SnesConnectorApp/SnesConnectorApp.csproj" />
         <entry key="SnesConnectorApp/MainWindow.axaml" value="SnesConnectorApp/SnesConnectorApp.csproj" />
+        <entry key="SnesConnectorApp/Views/MainWindow.axaml" value="SnesConnectorApp/SnesConnectorApp.csproj" />
       </map>
     </option>
   </component>

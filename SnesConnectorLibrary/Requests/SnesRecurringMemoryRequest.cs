@@ -1,12 +1,10 @@
-namespace SnesConnectorLibrary;
+namespace SnesConnectorLibrary.Requests;
 
 /// <summary>
 /// A memory retrieval request that is repeated on a specific interval and when certain conditions are met
 /// </summary>
 public class SnesRecurringMemoryRequest : SnesMemoryRequest
 {
-    public new SnesMemoryRequestType RequestType => SnesMemoryRequestType.Retrieve;
-
     /// <summary>
     /// The time in between successive requests
     /// </summary>

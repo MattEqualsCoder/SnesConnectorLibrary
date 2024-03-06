@@ -1,6 +1,8 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.Logging;
 using SnesConnectorLibrary.Connectors;
+using SnesConnectorLibrary.Requests;
+using SnesConnectorLibrary.Responses;
 
 namespace SnesConnectorLibrary;
 
@@ -8,7 +10,7 @@ internal class SnesConnectorService : ISnesConnectorService
 {
     private readonly ILogger<SnesConnectorService>? _logger;
     private readonly Dictionary<SnesConnectorType, ISnesConnector> _connectors = new();
-    private readonly List<SnesMemoryRequest> _queue = new();
+    private readonly List<SnesRequest> _queue = new();
     private readonly Dictionary<string, RecurringRequestList> _recurringRequests = new();
     private ISnesConnector? _currentConnector;
     private SnesConnectorType _currentConnectorType;
@@ -33,14 +35,28 @@ internal class SnesConnectorService : ISnesConnectorService
         _connectors[SnesConnectorType.Sni] = sniConnector;
     }
     
-    public event EventHandler? OnConnected;
-
-    public event EventHandler? OnDisconnected;
-
-    public event SnesDataReceivedEventHandler? OnMessage;
+    public void Dispose()
+    {
+        Disconnect();
+        _currentConnector?.Dispose();
+        GC.SuppressFinalize(this);
+    }
+    
+    #region Events and properties
+    public event EventHandler? Connected;
+    public event EventHandler? Disconnected;
+    public event SnesMemoryResponseEventHandler? MemoryReceived;
+    public event SnesResponseEventHandler<SnesMemoryRequest>? MemoryUpdated;
+    public event SnesFileListResponseEventHandler? FileListReceived;
+    public event SnesResponseEventHandler<SnesBootRomRequest>? RomBooted;
+    public event SnesResponseEventHandler<SnesUploadFileRequest>? FileUploaded;
+    public event SnesResponseEventHandler<SnesDeleteFileRequest>? FileDeleted;
 
     public bool IsConnected => _currentConnector?.IsConnected == true;
+    
+    #endregion
 
+    #region Public methods
     public void Connect(SnesConnectorType type)
     {
         Connect(new SnesConnectorSettings() { ConnectorType = type });
@@ -49,16 +65,28 @@ internal class SnesConnectorService : ISnesConnectorService
     public void Connect(SnesConnectorSettings settings)
     {
         Disconnect();
+
+        if (settings.ConnectorType == SnesConnectorType.None)
+        {
+            throw new InvalidOperationException("Invalid SNES Connector Type");
+        }
+        
         _logger?.LogInformation("Connecting to connector type {Type}", settings.ConnectorType.ToString());
         _currentConnectorType = settings.ConnectorType;
         _currentConnector = _connectors[settings.ConnectorType];
-        _currentConnector.OnConnected += CurrentConnectorOnConnected;
-        _currentConnector.OnDisconnected += CurrentConnectorOnDisconnected;
-        _currentConnector.OnMessage += CurrentConnectorOnMessage;
+        _currentConnector.Connected += CurrentConnectorConnected;
+        _currentConnector.Disconnected += CurrentConnectorDisconnected;
+        _currentConnector.MemoryReceived += CurrentConnectorMemoryReceived;
+        _currentConnector.MemoryUpdated += CurrentConnectorOnMemoryUpdated;
+        _currentConnector.GameDetected += CurrentConnectorOnGameDetected;
+        _currentConnector.FileListReceived += CurrentConnectorOnFileListReceived;
+        _currentConnector.RomBooted += CurrentConnectorOnRomBooted;
+        _currentConnector.FileUploaded += CurrentConnectorOnFileUploaded;
+        _currentConnector.FileDeleted += CurrentConnectorOnFileDeleted;
         _currentConnector.Enable(settings);
         _previousRequestData.Clear();
     }
-    
+
     public void Disconnect()
     {
         if (_currentConnector == null)
@@ -67,30 +95,42 @@ internal class SnesConnectorService : ISnesConnectorService
         }
         
         _currentConnector.Disable();
-        _currentConnector.OnConnected -= CurrentConnectorOnConnected;
-        _currentConnector.OnDisconnected -= CurrentConnectorOnDisconnected;
-        _currentConnector.OnMessage -= CurrentConnectorOnMessage;
+        _currentConnector.Connected -= CurrentConnectorConnected;
+        _currentConnector.Disconnected -= CurrentConnectorDisconnected;
+        _currentConnector.MemoryReceived -= CurrentConnectorMemoryReceived;
+        _currentConnector.MemoryUpdated -= CurrentConnectorOnMemoryUpdated;
+        _currentConnector.GameDetected -= CurrentConnectorOnGameDetected;
+        _currentConnector.FileListReceived -= CurrentConnectorOnFileListReceived;
+        _currentConnector.RomBooted -= CurrentConnectorOnRomBooted;
+        _currentConnector.FileUploaded -= CurrentConnectorOnFileUploaded;
+        _currentConnector.FileDeleted -= CurrentConnectorOnFileDeleted;
         _currentConnector = null;
     }
-    
-    public void Dispose()
-    {
-        Disconnect();
-        _currentConnector?.Dispose();
-        GC.SuppressFinalize(this);
-    }
 
-    public void MakeRequest(SnesSingleMemoryRequest request)
+    public bool GetFileList(SnesFileListRequest request) => MakeRequest(request);
+    public bool BootRom(SnesBootRomRequest request) => MakeRequest(request);
+    public bool UploadFile(SnesUploadFileRequest request) => MakeRequest(request);
+    public bool DeleteFile(SnesDeleteFileRequest request) => MakeRequest(request);
+    public bool MakeMemoryRequest(SnesSingleMemoryRequest request) => MakeRequest(request);
+
+    public bool MakeRequest(SnesRequest request)
     {
         if (_currentConnector?.IsConnected != true)
         {
             _logger?.LogWarning("No connected connector");
+            return false;
+        }
+        else if (!_currentConnector.CanMakeRequest(request))
+        {
+            _logger?.LogWarning("The current connector does not support that request type");
+            return false;
         }
 
         _queue.Add(request);
+        return true;
     }
     
-    public SnesRecurringMemoryRequest AddRecurringRequest(SnesRecurringMemoryRequest request)
+    public SnesRecurringMemoryRequest AddRecurringMemoryRequest(SnesRecurringMemoryRequest request)
     {
         if (_recurringRequests.TryGetValue(request.Key, out var recurringRequest))
         {
@@ -152,6 +192,12 @@ internal class SnesConnectorService : ISnesConnectorService
         }
     }
 
+    public ConnectorFunctionality CurrentConnectorFunctionality =>
+        _currentConnector?.SupportedFunctionality ?? new ConnectorFunctionality();
+
+    #endregion
+
+    #region Private methods
     private void CopyEmbeddedResource(string targetFolder, string relativePath)
     {
         var inputPath = "SnesConnectorLibrary.Lua." + relativePath.Replace('/', '.');
@@ -171,8 +217,10 @@ internal class SnesConnectorService : ISnesConnectorService
         }
     }
 
-    private void CurrentConnectorOnMessage(object sender, SnesDataReceivedEventArgs e)
+    private void CurrentConnectorMemoryReceived(object sender, SnesMemoryResponseEventArgs e)
     {
+        _logger?.LogDebug("{ByteCount} bytes received from {Domain} address 0x{Address}", e.Data.Raw.Length, e.Request.SnesMemoryDomain.ToString(), e.Request.Address.ToString("X"));
+        _logger?.LogTrace("{Domain} 0x{Address}: {Data}", e.Request.SnesMemoryDomain.ToString(), e.Request.Address.ToString("X"), string.Join("", e.Data.Raw.Select(x => x.ToString("X"))));
         if (e.Request is SnesRecurringMemoryRequest recurringRequest)
         {
             var key = recurringRequest.Key;
@@ -203,7 +251,12 @@ internal class SnesConnectorService : ISnesConnectorService
             InvokeRequest(e.Request, e.Data);
         }
         
-        OnMessage?.Invoke(sender, e);
+        MemoryReceived?.Invoke(sender, e);
+    }
+    
+    private void CurrentConnectorOnMemoryUpdated(object sender, SnesResponseEventArgs<SnesMemoryRequest> e)
+    {
+        MemoryUpdated?.Invoke(sender, e);
     }
 
     private void InvokeRequest(SnesMemoryRequest request, SnesData data)
@@ -218,25 +271,25 @@ internal class SnesConnectorService : ISnesConnectorService
         }
     }
 
-    private void CurrentConnectorOnDisconnected(object? sender, EventArgs e)
+    private void CurrentConnectorDisconnected(object? sender, EventArgs e)
     {
         _logger?.LogInformation("Disconnected from {Type} connector", _currentConnectorType.ToString());
-        OnDisconnected?.Invoke(sender, e);
+        Disconnected?.Invoke(sender, e);
     }
 
-    private void CurrentConnectorOnConnected(object? sender, EventArgs e)
+    private void CurrentConnectorConnected(object? sender, EventArgs e)
     {
         _logger?.LogInformation("Successfully connected to {Type} connector", _currentConnectorType.ToString());
         _previousRequestData.Clear();
         _ = ProcessRequests();
-        OnConnected?.Invoke(sender, e);
+        Connected?.Invoke(sender, e);
     }
     
     private async Task ProcessRequests()
     {
         while (IsConnected)
         {
-            if (_currentConnector?.CanMakeRequest == true)
+            if (_currentConnector?.CanProcessRequests == true)
             {
                 if (_queue.Any())
                 {
@@ -246,7 +299,7 @@ internal class SnesConnectorService : ISnesConnectorService
                 }
                 else if (_recurringRequests.Any())
                 {
-                    var request = _recurringRequests.Values.Where(x => x.MainRequest.CanRun).MinBy(x => x.MainRequest.NextRunTime);
+                    var request = _recurringRequests.Values.Where(x => x.MainRequest.CanRun && _currentConnector.CanMakeRequest(x.MainRequest)).MinBy(x => x.MainRequest.NextRunTime);
                     if (request != null)
                     {
                         await ProcessRequest(request.MainRequest);
@@ -254,12 +307,11 @@ internal class SnesConnectorService : ISnesConnectorService
                 }
             }
             
-            
             await Task.Delay(TimeSpan.FromMilliseconds(50));
         }
     }
 
-    private async Task ProcessRequest(SnesMemoryRequest request)
+    private async Task ProcessRequest(SnesRequest request)
     {
         if (!IsConnected)
         {
@@ -267,17 +319,76 @@ internal class SnesConnectorService : ISnesConnectorService
             return;
         }
         
-        if (request.RequestType == SnesMemoryRequestType.Retrieve)
+        if (request.RequestType == SnesRequestType.Memory && request is SnesMemoryRequest memoryRequest)
         {
-            await _currentConnector!.GetAddress(request);
+            if (memoryRequest.MemoryRequestType == SnesMemoryRequestType.RetrieveMemory)
+            {
+                _logger?.LogDebug("{Count} bytes requested from {Domain} address 0x{Address}", memoryRequest.Length, memoryRequest.SnesMemoryDomain.ToString(), memoryRequest.Address.ToString("X") );
+                await _currentConnector!.GetAddress(memoryRequest);    
+            }
+            else
+            {
+                _logger?.LogDebug("{Count} bytes being updated on {Domain} address 0x{Address}", memoryRequest.Data?.Count, memoryRequest.SnesMemoryDomain.ToString(), memoryRequest.Address.ToString("X") );
+                await _currentConnector!.PutAddress(memoryRequest);
+            }
         }
-        else if (request.RequestType == SnesMemoryRequestType.Update)
+        else if (request.RequestType == SnesRequestType.GetFileList && request is SnesFileListRequest fileListRequest)
         {
-            await _currentConnector!.PutAddress(request);
+            _logger?.LogDebug("Getting files from path {Path}", fileListRequest.Path);
+            await _currentConnector!.ListFiles(fileListRequest);
         }
-
+        else if (request.RequestType == SnesRequestType.BootRom && request is SnesBootRomRequest bootRomRequest)
+        {
+            _logger?.LogDebug("Booting rom {Rom}", bootRomRequest.Path);
+            await _currentConnector!.BootRom(bootRomRequest);
+        }
+        else if (request.RequestType == SnesRequestType.UploadFile && request is SnesUploadFileRequest uploadFileRequest)
+        {
+            _logger?.LogDebug("Uploading file {LocalPath} to {TargetPath}", uploadFileRequest.LocalFilePath, uploadFileRequest.TargetFilePath);
+            await _currentConnector!.UploadFile(uploadFileRequest);
+        }
+        else if (request.RequestType == SnesRequestType.DeleteFile && request is SnesDeleteFileRequest deleteFileRequest)
+        {
+            _logger?.LogDebug("Deleting file {Path}", deleteFileRequest.Path);
+            await _currentConnector!.DeleteFile(deleteFileRequest);
+        }
+    }
+    
+    private void CurrentConnectorOnFileDeleted(object sender, SnesResponseEventArgs<SnesDeleteFileRequest> e)
+    {
+        _logger?.LogInformation("{FileName} deleted", e.Request.Path);
+        FileDeleted?.Invoke(sender, e);
+        e.Request.OnComplete?.Invoke();
     }
 
+    private void CurrentConnectorOnFileUploaded(object sender, SnesResponseEventArgs<SnesUploadFileRequest> e)
+    {
+        _logger?.LogInformation("{Source} uploaded to {Destination}", e.Request.LocalFilePath, e.Request.TargetFilePath);
+        FileUploaded?.Invoke(sender, e);
+        e.Request.OnComplete?.Invoke();
+    }
+
+    private void CurrentConnectorOnRomBooted(object sender, SnesResponseEventArgs<SnesBootRomRequest> e)
+    {
+        _logger?.LogInformation("{FileName} booted", e.Request.Path);
+        RomBooted?.Invoke(sender, e);
+        e.Request.OnComplete?.Invoke();
+    }
+
+    private void CurrentConnectorOnFileListReceived(object sender, SnesFileListResponseEventArgs e)
+    {
+        _logger?.LogInformation("{Count} files found within {FileName}", e.Files.Count, e.Request.Path);
+        FileListReceived?.Invoke(sender, e);
+        e.Request.OnResponse?.Invoke(e.Files);
+    }
+
+    private void CurrentConnectorOnGameDetected(object? sender, EventArgs e)
+    {
+        _logger?.LogInformation("Game detected!");
+    }
+    #endregion
+
+    #region Classes
     private class RecurringRequestList
     {
         public SnesRecurringMemoryRequest MainRequest { get; private set; } = null!;
@@ -288,6 +399,7 @@ internal class SnesConnectorService : ISnesConnectorService
         {
             MainRequest = new SnesRecurringMemoryRequest()
             {
+                MemoryRequestType = Requests.First().MemoryRequestType,
                 Address = Requests.First().Address,
                 AddressFormat = Requests.First().AddressFormat,
                 SnesMemoryDomain = Requests.First().SnesMemoryDomain,
@@ -321,4 +433,5 @@ internal class SnesConnectorService : ISnesConnectorService
             isNowEmpty = false;
         }
     }
+    #endregion
 }

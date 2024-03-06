@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using SnesConnectorLibrary.Requests;
 
 namespace SnesConnectorLibrary.Connectors;
 
@@ -36,6 +37,8 @@ internal class LuaConnectorDefault : LuaConnector
             return;
         }
         
+        CurrentRequest = request;
+        
         await SendRequest(new LuaRequest()
         {
             Action = "write_bytes",
@@ -43,6 +46,8 @@ internal class LuaConnectorDefault : LuaConnector
             Address = TranslateAddress(request),
             WriteValues = request.Data
         });
+
+        ProcessMemoryUpdated(request);
     }
 
     protected override AddressFormat TargetAddressFormat => AddressFormat.Snes9x;

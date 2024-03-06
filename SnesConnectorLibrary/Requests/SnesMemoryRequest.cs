@@ -1,16 +1,20 @@
+using SnesConnectorLibrary.Connectors;
+using SnesConnectorLibrary.Responses;
 using SNI;
 
-namespace SnesConnectorLibrary;
+namespace SnesConnectorLibrary.Requests;
 
 /// <summary>
 /// A request to the SNES to either get or put memory
 /// </summary>
-public class SnesMemoryRequest
+public class SnesMemoryRequest : SnesRequest
 {
+    internal override SnesRequestType RequestType => SnesRequestType.Memory;
+    
     /// <summary>
-    /// The type of request (retrieve or update)
+    /// Whether the request is for updating or retrieving memory
     /// </summary>
-    public SnesMemoryRequestType RequestType;
+    public required SnesMemoryRequestType MemoryRequestType { get; set; }
     
     /// <summary>
     /// The memory address to retrieve or update. Note that this is in the snes9x memory ranges of WRAM starting at
@@ -55,4 +59,23 @@ public class SnesMemoryRequest
     /// <returns>The converted address location</returns>
     public int GetTranslatedAddress(AddressFormat to) =>
         AddressConversions.Convert(Address, SnesMemoryDomain, AddressFormat, to);
+
+    /// <summary>
+    /// If the request can be performed with the available connector functionality
+    /// </summary>
+    /// <param name="connectorFunctionality">The current connector's functionality</param>
+    /// <returns>True if the connector can perform this request</returns>
+    internal override bool CanPerformRequest(ConnectorFunctionality connectorFunctionality)
+    {
+        if (SnesMemoryDomain is SnesMemoryDomain.CartridgeSave or SnesMemoryDomain.ConsoleRAM && connectorFunctionality.CanReadMemory)
+        {
+            return true;
+        }
+        else if (SnesMemoryDomain is SnesMemoryDomain.Rom && connectorFunctionality.CanReadRom)
+        {
+            return true;
+        }
+
+        return false;
+    }
 }
