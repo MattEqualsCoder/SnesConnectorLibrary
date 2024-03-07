@@ -43,7 +43,6 @@ jobs:
       if: ${{ github.event_name != 'pull_request' }}
       shell: pwsh
       run: |
-        Set-Location $PSScriptRoot
         Copy-Item -Path SnesConnectorLibrary\bin\Release\*.nupkg -Destination Output
     - name: Building the Linux 64bit package
       if: ${{ github.event_name != 'pull_request' }}
