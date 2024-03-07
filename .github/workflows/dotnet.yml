@@ -43,7 +43,7 @@ jobs:
       if: ${{ github.event_name != 'pull_request' }}
       shell: pwsh
       run: |
-        $outputDir = "$pwd\Output\
+        $outputDir = "$pwd\Output\"
         New-Item -ItemType Directory -Force -Path $outputDir
         Copy-Item -Path SnesConnectorLibrary\bin\Release\*.nupkg -Destination $outputDir
     - name: Building the Win 64bit package
