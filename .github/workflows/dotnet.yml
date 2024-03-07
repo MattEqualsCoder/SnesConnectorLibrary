@@ -44,13 +44,27 @@ jobs:
       shell: pwsh
       run: |
         Copy-Item -Path SnesConnectorLibrary\bin\Release\*.nupkg -Destination Output
+    - name: Building the Win 64bit package
+      if: ${{ github.event_name != 'pull_request' }}
+      shell: pwsh
+      run: |
+        $outputFile = "$pwd\Output\SnesConnectorApp_Win64_${{ steps.version.outputs.number }}.zip"
+        Set-Location SnesConnectorApp\bin\Release\net8.0\win-x64\publish
+        Compress-Archive -Path * -DestinationPath $outputFile
+    - name: Building the Win 32bit package
+      if: ${{ github.event_name != 'pull_request' }}
+      shell: pwsh
+      run: |
+        $outputFile = "$pwd\Output\SnesConnectorApp_Win32_${{ steps.version.outputs.number }}.zip"
+        Set-Location SnesConnectorApp\bin\Release\net8.0\win-x86\publish
+        Compress-Archive -Path * -DestinationPath $outputFile
     - name: Building the Linux 64bit package
       if: ${{ github.event_name != 'pull_request' }}
       shell: pwsh
       run: |
-        $outputFile = "$pwd\Output\SnesConnectorApp_${{ steps.version.outputs.number }}.tar.gz"
+        $outputFile = "$pwd\Output\SnesConnectorApp_Linux_${{ steps.version.outputs.number }}.tar.gz"
         Set-Location SnesConnectorApp\bin\Release\net8.0\linux-x64\publish
-        var -cvzf $outputFile *
+        tar -cvzf $outputFile *
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       if: ${{ github.event_name != 'pull_request' }}
