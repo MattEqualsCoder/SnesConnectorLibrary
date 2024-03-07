@@ -7,6 +7,9 @@ namespace SnesConnectorLibrary;
 /// </summary>
 public enum SnesConnectorType
 {
+    [Description("None")]
+    None,
+    
     [Description("QUSB2SNES/USB2SNES")]
     Usb2Snes,
     

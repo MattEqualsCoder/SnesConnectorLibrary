@@ -1,3 +1,7 @@
+using SnesConnectorLibrary.Connectors;
+using SnesConnectorLibrary.Requests;
+using SnesConnectorLibrary.Responses;
+
 namespace SnesConnectorLibrary;
 
 /// <summary>
@@ -8,17 +12,42 @@ public interface ISnesConnectorService : IDisposable
     /// <summary>
     /// Event for when the active connector successfully connects to the SNES
     /// </summary>
-    public event EventHandler? OnConnected;
+    public event EventHandler? Connected;
 
     /// <summary>
     /// Event for when the active connector disconnects from the SNES
     /// </summary>
-    public event EventHandler? OnDisconnected;
+    public event EventHandler? Disconnected;
 
     /// <summary>
     /// Event for when the active connector receives a message from the SNES
     /// </summary>
-    public event SnesDataReceivedEventHandler? OnMessage;
+    public event SnesMemoryResponseEventHandler? MemoryReceived;
+
+    /// <summary>
+    /// Event for when the active connector updates memory
+    /// </summary>
+    public event SnesResponseEventHandler<SnesMemoryRequest>? MemoryUpdated; 
+
+    /// <summary>
+    /// Event for when files have been received from the SNES
+    /// </summary>
+    public event SnesFileListResponseEventHandler? FileListReceived;
+
+    /// <summary>
+    /// Event for when a rom has been successfully booted
+    /// </summary>
+    public event SnesResponseEventHandler<SnesBootRomRequest>? RomBooted;
+
+    /// <summary>
+    /// Event for when a file has been uploaded to the SNES
+    /// </summary>
+    public event SnesResponseEventHandler<SnesUploadFileRequest>? FileUploaded;
+
+    /// <summary>
+    /// Event for when a file has been deleted from the SNES
+    /// </summary>
+    public event SnesResponseEventHandler<SnesDeleteFileRequest>? FileDeleted;
     
     /// <summary>
     /// Creates the default instance of an ISnesConnectorService
@@ -52,17 +81,55 @@ public interface ISnesConnectorService : IDisposable
     public void Disconnect();
 
     /// <summary>
-    /// Makes a single request to either GET or PUT memory to the SNES via the active connector
+    /// Makes a request to the SNES via the active connector
+    /// </summary>
+    /// <param name="request">The request to make to the SNES. The action will be determined by the type of SnesRequest
+    /// object passed in.</param>
+    /// <returns>True if the request can be made at this time.</returns>
+    public bool MakeRequest(SnesRequest request);
+    
+    /// <summary>
+    /// Makes a single request to either GET or PUT memory to the SNES via the active connector. Reading/writing the ROM
+    /// is not supported on snes9x cores and in SNI.
     /// </summary>
     /// <param name="request">The request to make to the SNES</param>
-    public void MakeRequest(SnesSingleMemoryRequest request);
+    /// <returns>True if the request can be made to the connector</returns>
+    public bool MakeMemoryRequest(SnesSingleMemoryRequest request);
+
+    /// <summary>
+    /// Requests a list of files from the SNES. Only supported on hardware connected via SNI and USB2SNES.
+    /// </summary>
+    /// <param name="request">The request to make to the snes</param>
+    /// <returns>True if the request can be made to the connector</returns>
+    public bool GetFileList(SnesFileListRequest request);
+
+    /// <summary>
+    /// Attempts to boot a rom on the SNES. Only supported on hardware connected via SNI and USB2SNES.
+    /// </summary>
+    /// <param name="request">The request to make to the SNES</param>
+    /// <returns>True if the request can be made to the connector</returns>
+    public bool BootRom(SnesBootRomRequest request);
+
+    /// <summary>
+    /// Attepts to upload a file to the SNES. Only supported on hardware connected via SNI and USB2SNES.
+    /// </summary>
+    /// <param name="request">The request to make to the SNES</param>
+    /// <returns>True if the request can be made to the connector</returns>
+    public bool UploadFile(SnesUploadFileRequest request);
+    
+    /// <summary>
+    /// Attepts to delete a file from the SNES. Only supported on hardware connected via SNI and USB2SNES.
+    /// </summary>
+    /// <param name="request">The request to make to the SNES</param>
+    /// <returns>True if the request can be made to the connector</returns>
+    public bool DeleteFile(SnesDeleteFileRequest request);
 
     /// <summary>
     /// Makes a recurring scheduled request to the SNES via the active connector
     /// </summary>
     /// <param name="request">The request to make, including details of when it should run</param>
     /// <returns>The added request</returns>
-    public SnesRecurringMemoryRequest AddRecurringRequest(SnesRecurringMemoryRequest request);
+    public SnesRecurringMemoryRequest AddRecurringMemoryRequest(SnesRecurringMemoryRequest request);
 
     /// <summary>
     /// Removes a previously added scheduled request
@@ -76,6 +143,11 @@ public interface ISnesConnectorService : IDisposable
     /// <param name="folder">The folder to create the Lua scripts at</param>
     /// <returns>True if successful, false otherwise</returns>
     public bool CreateLuaScriptsFolder(string folder);
+
+    /// <summary>
+    /// Retrieves the functionality of the current connector
+    /// </summary>
+    public ConnectorFunctionality CurrentConnectorFunctionality { get; }
 
 
 }

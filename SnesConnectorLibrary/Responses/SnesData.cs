@@ -1,4 +1,4 @@
-namespace SnesConnectorLibrary;
+namespace SnesConnectorLibrary.Responses;
 
 /// <summary>
 /// Class that holds data returned by the SNES

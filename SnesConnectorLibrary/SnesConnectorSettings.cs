@@ -26,6 +26,11 @@ public class SnesConnectorSettings
     public string LuaAddress { get; set; } = "";
 
     /// <summary>
+    /// Duration until timing out an active connector if there are no responses
+    /// </summary>
+    public int TimeoutSeconds { get; set; } = 60;
+
+    /// <summary>
     /// The client named sent to USB2SNES/QUSB2SNES
     /// </summary>
     public string ClientName { get; set; } = "SnesConnectorLibrary";

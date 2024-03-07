@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
+using SnesConnectorLibrary.Requests;
 
 namespace SnesConnectorLibrary.Connectors;
 
@@ -17,7 +18,7 @@ internal class LuaConnectorEmoTracker : LuaConnector
     {
     }
     
-     public override async Task GetAddress(SnesMemoryRequest request)
+     public override async Task RetrieveMemory(SnesMemoryRequest request)
     {
         CurrentRequest = request;
         await Send(new EmoTrackerRequest()
@@ -29,12 +30,14 @@ internal class LuaConnectorEmoTracker : LuaConnector
         });
     }
 
-    public override async Task PutAddress(SnesMemoryRequest request)
+    public override async Task UpdateMemory(SnesMemoryRequest request)
     {
         if (request.Data == null)
         {
             throw new InvalidOperationException("PutData called without any data");
         }
+
+        CurrentRequest = request;
 
         if (IsBizHawk)
         {
@@ -80,7 +83,7 @@ internal class LuaConnectorEmoTracker : LuaConnector
         }
         else
         {
-            _ = Send(new EmoTrackerRequest()
+            await Send(new EmoTrackerRequest()
             {
                 Type = 0x1F,
                 Address = TranslateAddress(request),
@@ -88,6 +91,8 @@ internal class LuaConnectorEmoTracker : LuaConnector
                 Domain = IsBizHawk ? GetDomainString(request.SnesMemoryDomain) : ""
             });
         }
+        
+        ProcessMemoryUpdated(request);
     }
 
     protected override AddressFormat TargetAddressFormat => IsBizHawk ? AddressFormat.BizHawk : AddressFormat.Snes9x;

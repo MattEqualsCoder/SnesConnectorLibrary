@@ -1,0 +1,97 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:AvaloniaControls.Controls;assembly=AvaloniaControls"
+        xmlns:viewModels="clr-namespace:SnesConnectorApp.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="385"
+        Width="800" Height="385"
+        CanResize="False"
+        x:Class="SnesConnectorApp.Views.MainWindow"
+        x:DataType="viewModels:MainWindowViewModel"
+        Title="SNES Connector Test App">
+    <DockPanel>
+        <TextBlock Text="{Binding Status}" DockPanel.Dock="Bottom" Padding="3"></TextBlock>
+        <StackPanel Orientation="Vertical" Margin="5">
+            <StackPanel Orientation="Horizontal">
+                <Label Margin="0 2 2 2">Connector: </Label>
+                <controls:EnumComboBox
+                    EnumType="{Binding ConnectorType, Converter={StaticResource TypeConverter}}"
+                    Value="{Binding ConnectorType, Mode=TwoWay}"
+                    ValueChanged="EnumComboBox_OnValueChanged"
+                >
+                </controls:EnumComboBox>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal">
+                <Label>Rom Title: </Label><Label Content="{Binding Title }"></Label>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal">
+                <Label>Current Game: </Label><Label Content="{Binding CurrentGame }"></Label>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal">
+                <Label>Position: </Label><Label Content="{Binding Position }"></Label>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal" Margin="0 5">
+                <Button Name="RefillHealthButton" Click="RefillHealthButton_OnClick" IsEnabled="{Binding IsConnected}">Refill Health</Button>
+                <Button Margin="10 0" Name="GiveItemButton" Click="GiveItemButton_OnClick" IsEnabled="{Binding IsConnected}">Give Item</Button>
+            </StackPanel>
+            
+            <controls:CardControl HeaderText="Roms" Margin="0 5 0 0">
+                <StackPanel>
+                    <ListBox SelectionMode="Single" ItemsSource="{Binding Roms}" SelectedItem="{Binding SelectedRom, Mode=TwoWay}" Height="150">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="*,Auto,Auto">
+                                    <TextBlock Grid.Column="0" Text="{Binding}"></TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <controls:HeaderFooter>
+                        <Grid ColumnDefinitions="*, Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <controls:FileControl 
+                                    Margin="5" 
+                                    Watermark="Upload Rom" 
+                                    Filter="Rom Files:*.sfc,*.smc"
+                                    ButtonText="Upload Rom" 
+                                    ShowClearButton="False"
+                                    ShowTextBox="False"
+                                    OnUpdated="FileControl_OnOnUpdated"
+                                    IsEnabled="{Binding IsConnected}"
+                                ></controls:FileControl>
+                                
+                                <Button 
+                                    Margin="5" 
+                                    Name="ScanFilesButton" 
+                                    Click="ScanFilesButton_OnClick"
+                                    IsEnabled="{Binding IsConnected}"
+                                >Scan Files</Button>
+                                
+                                <Button 
+                                    Margin="5" 
+                                    Name="LoadRomButton" 
+                                    Click="LoadRomButton_OnClick" 
+                                    IsEnabled="{Binding CanBootDeleteFile}"
+                                >Boot Selected Rom</Button>
+                                
+                                <Button 
+                                    Margin="5" 
+                                    Name="DeleteRomButton" 
+                                    Click="DeleteRomButton_OnClick" 
+                                    IsEnabled="{Binding CanBootDeleteFile}"
+                                >Deleted Selected Rom</Button>
+                                
+                            </StackPanel>
+                        </Grid>
+                        
+                    </controls:HeaderFooter>
+                </StackPanel>
+            </controls:CardControl>
+        </StackPanel>
+    </DockPanel>
+</Window>

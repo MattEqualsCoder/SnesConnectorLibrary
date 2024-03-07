@@ -1,6 +1,8 @@
 ﻿using System.Net;
 using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
+using SnesConnectorLibrary.Requests;
+using SnesConnectorLibrary.Responses;
 
 namespace SnesConnectorLibrary.Connectors;
 
@@ -23,9 +25,49 @@ internal abstract class LuaConnector : ISnesConnector
         Logger = logger;
     }
     
-    public event EventHandler? OnConnected;
-    public event EventHandler? OnDisconnected;
-    public event SnesDataReceivedEventHandler? OnMessage;
+    public void Dispose()
+    {
+        IsConnected = false;
+        IsGameDetected = false;
+        Disable();
+        GC.SuppressFinalize(this);
+    }
+    
+    #region Events and properties
+    
+    public event EventHandler? Connected;
+    public event EventHandler? GameDetected;
+    public event EventHandler? Disconnected;
+    public event SnesMemoryResponseEventHandler? MemoryReceived;
+    public event SnesResponseEventHandler<SnesMemoryRequest>? MemoryUpdated;
+    public event SnesFileListResponseEventHandler? FileListReceived;
+    public event SnesResponseEventHandler<SnesBootRomRequest>? RomBooted;
+    public event SnesResponseEventHandler<SnesUploadFileRequest>? FileUploaded;
+    public event SnesResponseEventHandler<SnesDeleteFileRequest>? FileDeleted;
+    
+    public bool IsConnected { get; private set; }
+    
+    public bool IsGameDetected { get; private set; }
+
+    public bool CanProcessRequests => IsConnected && CurrentRequest == null && Socket?.Connected == true;
+    
+    public int TranslateAddress(SnesMemoryRequest request) =>
+        request.GetTranslatedAddress(TargetAddressFormat);
+
+    public ConnectorFunctionality SupportedFunctionality => new()
+    {
+        CanReadMemory = true,
+        CanReadRom = false,
+        CanAccessFiles = false
+    };
+    #endregion
+    
+    #region Public methods
+    public bool CanMakeRequest(SnesRequest request) => CanProcessRequests && request.CanPerformRequest(SupportedFunctionality);
+
+    public abstract Task RetrieveMemory(SnesMemoryRequest request);
+
+    public abstract Task UpdateMemory(SnesMemoryRequest request);
     
     public void Enable(SnesConnectorSettings settings)
     {
@@ -43,28 +85,41 @@ internal abstract class LuaConnector : ISnesConnector
     public void Disable()
     {
         IsEnabled = false;
+        IsGameDetected = false;
         MarkAsDisconnected();
         _tcpListener?.Stop();
     }
     
-    public void Dispose()
+    public Task ListFiles(SnesFileListRequest request)
     {
-        IsConnected = false;
-        Disable();
-        GC.SuppressFinalize(this);
+        FileListReceived?.Invoke(this, new SnesFileListResponseEventArgs()
+        {
+            Request = request,
+            Files = new List<SnesFile>()
+        });
+        return Task.CompletedTask;
+    }
+
+    public Task BootRom(SnesBootRomRequest request)
+    {
+        RomBooted?.Invoke(this, new SnesResponseEventArgs<SnesBootRomRequest>() { Request = request });
+        return Task.CompletedTask;
     }
     
-    public abstract Task GetAddress(SnesMemoryRequest request);
-
-    public abstract Task PutAddress(SnesMemoryRequest request);
-
-    public bool IsConnected { get; private set; }
+    public Task UploadFile(SnesUploadFileRequest request)
+    {
+        FileUploaded?.Invoke(this, new SnesResponseEventArgs<SnesUploadFileRequest>() { Request = request });
+        return Task.CompletedTask;
+    }
     
-    public bool CanMakeRequest => IsConnected && CurrentRequest == null && Socket?.Connected == true;
+    public Task DeleteFile(SnesDeleteFileRequest request)
+    {
+        FileDeleted?.Invoke(this, new SnesResponseEventArgs<SnesDeleteFileRequest>() { Request = request });
+        return Task.CompletedTask;
+    }
+    #endregion
     
-    public int TranslateAddress(SnesMemoryRequest request) =>
-        request.GetTranslatedAddress(TargetAddressFormat);
-    
+    #region Protected methods
     protected abstract AddressFormat TargetAddressFormat { get; }
     
     protected abstract int GetDefaultPort();
@@ -77,20 +132,30 @@ internal abstract class LuaConnector : ISnesConnector
 
     protected void MarkConnected()
     {
-        Logger?.LogInformation("Connected!");
         CurrentRequest = null;
         IsConnected = true;
+        IsGameDetected = true;
+        
         _lastMessageTime = DateTime.Now;
-        OnConnected?.Invoke(this, EventArgs.Empty);
+        Connected?.Invoke(this, EventArgs.Empty);
+        GameDetected?.Invoke(this, EventArgs.Empty);
     }
 
     protected void ProcessRequestBytes(SnesMemoryRequest request, byte[] data)
     {
-        OnMessage?.Invoke(this, new SnesDataReceivedEventArgs()
+        CurrentRequest = null;
+        MemoryReceived?.Invoke(this, new SnesMemoryResponseEventArgs()
         {
             Request = request,
             Data = new SnesData(data)
         });
+        
+    }
+
+    protected void ProcessMemoryUpdated(SnesMemoryRequest request)
+    {
+        CurrentRequest = null;
+        MemoryUpdated?.Invoke(this, new SnesResponseEventArgs<SnesMemoryRequest>() { Request = request });
     }
 
     protected string GetDomainString(SnesMemoryDomain domain)
@@ -127,10 +192,12 @@ internal abstract class LuaConnector : ISnesConnector
             IsConnected = false;
             CurrentRequest = null;
             _lastMessageTime = null;
-            OnDisconnected?.Invoke(this, EventArgs.Empty);
+            Disconnected?.Invoke(this, EventArgs.Empty);
         }
-    }
-    
+    }    
+    #endregion
+
+    #region Private methods
     private void GetAddressAndPort(SnesConnectorSettings settings, out IPAddress address, out int port)
     {
         address = IPAddress.Loopback;
@@ -160,7 +227,7 @@ internal abstract class LuaConnector : ISnesConnector
             }
         }
     }
-
+    
     private async Task StartSocketServer(SnesConnectorSettings settings)
     {
         GetAddressAndPort(settings, out var address, out var port);
@@ -228,4 +295,6 @@ internal abstract class LuaConnector : ISnesConnector
             await Task.Delay(TimeSpan.FromSeconds(1));
         }
     }
+    #endregion
+    
 }
