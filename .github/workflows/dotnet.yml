@@ -24,13 +24,13 @@ jobs:
       run: dotnet build --no-restore  --configuration Release -p:PostBuildEvent= 
     - name: Publish Windows 64bit
       if: ${{ github.event_name != 'pull_request' }}
-      run: dotnet publish --os win --arch x64 -c Release --self-contained false SnesConnectorApp/SnesConnectorApp.csproj
+      run: dotnet publish --os win --arch x64 -c Release -f net8.0 --self-contained false SnesConnectorApp/SnesConnectorApp.csproj
     - name: Publish Windows 32bit
       if: ${{ github.event_name != 'pull_request' }}
-      run: dotnet publish --os win --arch x86 -c Release --self-contained false SnesConnectorApp/SnesConnectorApp.csproj
+      run: dotnet publish --os win --arch x86 -c Release -f net8.0 --self-contained false SnesConnectorApp/SnesConnectorApp.csproj
     - name: Publish Linux 64bit
       if: ${{ github.event_name != 'pull_request' }}
-      run: dotnet publish --os linux --arch x64 -c Release --self-contained false SnesConnectorApp/SnesConnectorApp.csproj
+      run: dotnet publish --os linux --arch x64 -c Release -f net8.0 --self-contained false SnesConnectorApp/SnesConnectorApp.csproj
     - name: Get version number
       if: ${{ github.event_name != 'pull_request' }}
       id: version
@@ -44,7 +44,7 @@ jobs:
       shell: pwsh
       run: |
         Set-Location $PSScriptRoot
-        Copy-Item -Path SnesConnectorApp\bin\Release\*.nupkg -Destination Output
+        Copy-Item -Path SnesConnectorLibrary\bin\Release\*.nupkg -Destination Output
     - name: Building the Linux 64bit package
       if: ${{ github.event_name != 'pull_request' }}
       shell: pwsh
