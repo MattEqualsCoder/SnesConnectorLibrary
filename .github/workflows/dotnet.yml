@@ -2,7 +2,7 @@ name: .NET Build + Publish
 
 on:
   push:
-    branches: [ additional-connector-functionality ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
