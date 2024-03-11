@@ -6,7 +6,7 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>0.9.1</Version>
+        <Version>0.9.2</Version>
         <TargetFrameworks>net8.0</TargetFrameworks>
     </PropertyGroup>
 

@@ -64,6 +64,11 @@ internal class SnesConnectorService : ISnesConnectorService
 
     public void Connect(SnesConnectorSettings settings)
     {
+        if (IsConnected && _currentConnectorType == settings.ConnectorType)
+        {
+            return;
+        }
+        
         Disconnect();
 
         if (settings.ConnectorType == SnesConnectorType.None)
