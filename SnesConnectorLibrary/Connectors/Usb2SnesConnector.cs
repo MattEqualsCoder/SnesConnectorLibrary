@@ -35,6 +35,7 @@ internal class Usb2SnesConnector : ISnesConnector
     private List<SnesFile> _foundListFiles = new();
     private string _prevInfo = "";
     private bool _isSd2Snes;
+    private bool _isListForPutFile;
 
     public Usb2SnesConnector()
     {
@@ -238,6 +239,8 @@ internal class Usb2SnesConnector : ISnesConnector
     public async Task ListFiles(SnesFileListRequest request)
     {
         _pendingRequest = request;
+
+        _isListForPutFile = false;
         
         var parentFolderName = request.Path;
         if (parentFolderName.Contains('/'))
@@ -319,10 +322,23 @@ internal class Usb2SnesConnector : ISnesConnector
             }
         }
 
-        await Task.Delay(TimeSpan.FromSeconds(5));
+        if (file.Length > 2048 * 1024)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(20));
+        }
+        else
+        {
+            await Task.Delay(TimeSpan.FromSeconds(10));
+        }
+
+        _isListForPutFile = true;
         
-        _pendingRequest = null;
-        FileUploaded?.Invoke(this, new SnesResponseEventArgs<SnesUploadFileRequest>() { Request = request });
+        await Send(new Usb2SnesRequest()
+        {
+            Opcode = FileListOpCode,
+            Space = "SNES",
+            Operands = new List<string>() { "/" }
+        });
     }
 
     public async Task DeleteFile(SnesDeleteFileRequest request)
@@ -602,6 +618,14 @@ internal class Usb2SnesConnector : ISnesConnector
 
     private async Task ParseFileList(string message)
     {
+        if (_isListForPutFile)
+        {
+            var fileRequest = (_pendingRequest as SnesUploadFileRequest)!;
+            _pendingRequest = null;
+            FileUploaded?.Invoke(this, new SnesResponseEventArgs<SnesUploadFileRequest>() { Request = fileRequest });
+            return;
+        }
+        
         var response = JsonSerializer.Deserialize<Usb2SnesDeviceListResponse>(message);
 
         if (response?.Results == null || response.Results.Count == 0)
