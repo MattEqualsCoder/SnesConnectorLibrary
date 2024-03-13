@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,7 +11,7 @@ using SNI;
 
 namespace SnesConnectorApp.Services;
 
-public class MainWindowService(ILogger<MainWindowService> logger, ISnesConnectorService snesConnectorService) : IControlService
+public class MainWindowService(ILogger<MainWindowService> logger, ISnesConnectorService snesConnectorService) : ControlService
 {
     public MainWindowViewModel Model { get; set; } = new();
 

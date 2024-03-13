@@ -224,7 +224,15 @@ internal class SnesConnectorService : ISnesConnectorService
 
     private void CurrentConnectorMemoryReceived(object sender, SnesMemoryResponseEventArgs e)
     {
-        _logger?.LogDebug("{ByteCount} bytes received from {Domain} address 0x{Address}", e.Data.Raw.Length, e.Request.SnesMemoryDomain.ToString(), e.Request.Address.ToString("X"));
+        if (e.Data.Raw.Length > 10)
+        {
+            _logger?.LogDebug("{ByteCount} bytes received from {Domain} address 0x{Address}", e.Data.Raw.Length, e.Request.SnesMemoryDomain.ToString(), e.Request.Address.ToString("X"));    
+        }
+        else
+        {
+            _logger?.LogDebug("[{Data}] received from {Domain} address 0x{Address}", string.Join(", ", e.Data.Raw), e.Request.SnesMemoryDomain.ToString(), e.Request.Address.ToString("X"));
+        }
+        
         _logger?.LogTrace("{Domain} 0x{Address}: {Data}", e.Request.SnesMemoryDomain.ToString(), e.Request.Address.ToString("X"), string.Join("", e.Data.Raw.Select(x => x.ToString("X"))));
         if (e.Request is SnesRecurringMemoryRequest recurringRequest)
         {
