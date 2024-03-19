@@ -74,10 +74,10 @@ internal class Usb2SnesConnector : ISnesConnector
             Disable();    
         }
 
-        var address = string.IsNullOrEmpty(settings.Usb2SnesAddress) ? "localhost:8080" : settings.Usb2SnesAddress;
+        var address = string.IsNullOrEmpty(settings.Usb2SnesAddress) ? "localhost:23074" : settings.Usb2SnesAddress;
         if (!address.Contains(':'))
         {
-            address += ":8080";
+            address += ":23074";
         }
 
         if (!address.StartsWith("ws://"))
