@@ -49,8 +49,9 @@ public class SnesMemoryRequest : SnesRequest
     
     /// <summary>
     /// Callback function when data is successfully retrieved from the SNES, if applicable
+    /// Returns the current data followed by the prev data, if applicable
     /// </summary>
-    public Action<SnesData>? OnResponse { get; set; }
+    public Action<SnesData, SnesData?>? OnResponse { get; set; }
 
     /// <summary>
     /// Gets the address translated to the requested format

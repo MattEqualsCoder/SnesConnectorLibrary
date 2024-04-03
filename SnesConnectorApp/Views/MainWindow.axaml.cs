@@ -34,7 +34,7 @@ public partial class MainWindow : RestorableWindow
             return;
         }
         _service = IControlServiceFactory.GetControlService<MainWindowService>();
-        DataContext = _service.InitializeModel();
+        DataContext = _service?.InitializeModel();
     }
 
     protected override string RestoreFilePath => "main-window.json";

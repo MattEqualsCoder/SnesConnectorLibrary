@@ -165,7 +165,31 @@ internal class SnesConnectorService : ISnesConnectorService
             try
             {
                 Directory.CreateDirectory(folder);
+            }
+            catch (Exception e)
+            {
+                _logger?.LogInformation(e, "Could not create target Lua folder {Path}", folder);
+                return false;
+            }
+        }
+        
+        if (!Directory.Exists(Path.Combine(folder, "x64")))
+        {
+            try
+            {
                 Directory.CreateDirectory(Path.Combine(folder, "x64"));
+            }
+            catch (Exception e)
+            {
+                _logger?.LogInformation(e, "Could not create target Lua folder {Path}", folder);
+                return false;
+            }
+        }
+        
+        if (!Directory.Exists(Path.Combine(folder, "x86")))
+        {
+            try
+            {
                 Directory.CreateDirectory(Path.Combine(folder, "x86"));
             }
             catch (Exception e)
@@ -252,7 +276,7 @@ internal class SnesConnectorService : ISnesConnectorService
                     
                     if (!request.RespondOnChangeOnly || dataChanged)
                     {
-                        InvokeRequest(request, e.Data);
+                        InvokeRequest(request, e.Data, prevRequest);
                     }
                 }
                 
@@ -261,7 +285,7 @@ internal class SnesConnectorService : ISnesConnectorService
         }
         else
         {
-            InvokeRequest(e.Request, e.Data);
+            InvokeRequest(e.Request, e.Data, null);
         }
         
         MemoryReceived?.Invoke(sender, e);
@@ -272,11 +296,11 @@ internal class SnesConnectorService : ISnesConnectorService
         MemoryUpdated?.Invoke(sender, e);
     }
 
-    private void InvokeRequest(SnesMemoryRequest request, SnesData data)
+    private void InvokeRequest(SnesMemoryRequest request, SnesData data, SnesData? prevData)
     {
         try
         {
-            request.OnResponse?.Invoke(data);
+            request.OnResponse?.Invoke(data, prevData);
         }
         catch (Exception exception)
         {

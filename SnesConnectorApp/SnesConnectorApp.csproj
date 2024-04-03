@@ -5,8 +5,7 @@
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>0.9.4</Version>
+        <Version>0.9.5</Version>
         <TargetFrameworks>net8.0</TargetFrameworks>
     </PropertyGroup>
 

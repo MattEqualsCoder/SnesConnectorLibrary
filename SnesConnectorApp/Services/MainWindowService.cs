@@ -30,7 +30,7 @@ public class MainWindowService(ILogger<MainWindowService> logger, ISnesConnector
             Address = 0xA173FE,
             Length = 2,
             FrequencySeconds = 0.5,
-            OnResponse = data =>
+            OnResponse = (data, prevData) =>
             {
                 Model.CurrentGame = data.ReadUInt8(0) == 0xFF ? "Super Metroid" : "A Link to the Past";
             },
@@ -47,7 +47,7 @@ public class MainWindowService(ILogger<MainWindowService> logger, ISnesConnector
             Length = 4,
             FrequencySeconds = 0.5,
             RespondOnChangeOnly = true,
-            OnResponse = data =>
+            OnResponse = (data, prevData) =>
             {
                 Model.Position = $"({data.ReadUInt16(2)}, {data.ReadUInt16(0)})";
             },
@@ -65,7 +65,7 @@ public class MainWindowService(ILogger<MainWindowService> logger, ISnesConnector
             Length = 8,
             FrequencySeconds = 0.5,
             RespondOnChangeOnly = true,
-            OnResponse = data =>
+            OnResponse = (data, prevData) =>
             {
                 Model.Position = $"({data.ReadUInt16(0)}, {data.ReadUInt16(4)})";
             },
@@ -82,7 +82,7 @@ public class MainWindowService(ILogger<MainWindowService> logger, ISnesConnector
             Address = 0x00FFC0,
             Length = 20,
             FrequencySeconds = 0.5,
-            OnResponse = data =>
+            OnResponse = (data, prevData) =>
             {
                 Model.Title = Encoding.ASCII.GetString(data.Raw);
             }
@@ -133,7 +133,7 @@ public class MainWindowService(ILogger<MainWindowService> logger, ISnesConnector
                 SniMemoryMapping = MemoryMapping.ExHiRom,
                 Address = 0x7E09C4,
                 Length = 2,
-                OnResponse = data =>
+                OnResponse = (data, prevData) =>
                 {
                     var maxEnergy = data.ReadUInt16(0);
                     if (maxEnergy == null) return;
@@ -160,7 +160,7 @@ public class MainWindowService(ILogger<MainWindowService> logger, ISnesConnector
                 SniMemoryMapping = MemoryMapping.ExHiRom,
                 Address = 0x7EF36C,
                 Length = 1,
-                OnResponse = data =>
+                OnResponse = (data, prevData) =>
                 {
                     var maxHealth = data.ReadUInt8(0);
                     if (maxHealth == null) return;
@@ -188,7 +188,7 @@ public class MainWindowService(ILogger<MainWindowService> logger, ISnesConnector
             SniMemoryMapping = MemoryMapping.ExHiRom,
             Address = 0xA26602,
             Length = 2,
-            OnResponse = data =>
+            OnResponse = (data, prevData) =>
             {
                 var giftedItemCount = data.ReadUInt16(0);
                 if (giftedItemCount == null) return;

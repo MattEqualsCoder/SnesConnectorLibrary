@@ -74,7 +74,7 @@ _snesConnectorService.MakeMemoryRequest(new SnesSingleMemoryRequest()
     SniMemoryMapping = MemoryMapping.ExHiRom,
     Address = 0x7E09C4,
     Length = 2,
-    OnResponse = data =>
+    OnResponse = (data, prevData) =>
     {
         Console.WriteLine("Data Received");
     }
@@ -119,7 +119,7 @@ var request = _snesConnectorService.AddRecurringMemoryRequest(new SnesRecurringM
     Length = 2,
     FrequencySeconds = 0.5,
     RespondOnChangeOnly = true,
-    OnResponse = data =>
+    OnResponse = (data, prevData) =>
     {
         Model.CurrentGame = data.ReadUInt8(0) == 0xFF ? "Super Metroid" : "A Link to the Past";
     },
