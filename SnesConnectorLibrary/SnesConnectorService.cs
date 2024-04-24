@@ -158,6 +158,13 @@ internal class SnesConnectorService : ISnesConnectorService
         }
     }
 
+    public void ClearRequests()
+    {
+        _recurringRequests.Clear();
+        _previousRequestData.Clear();
+        _queue.Clear();
+    }
+
     public bool CreateLuaScriptsFolder(string folder)
     {
         if (!Directory.Exists(folder))

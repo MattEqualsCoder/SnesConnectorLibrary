@@ -138,6 +138,11 @@ public interface ISnesConnectorService : IDisposable
     public void RemoveRecurringRequest(SnesRecurringMemoryRequest request);
 
     /// <summary>
+    /// Removes all queued and scheduled requests and affiliated data
+    /// </summary>
+    public void ClearRequests();
+
+    /// <summary>
     /// Creates all of the Lua script files at the provided location
     /// </summary>
     /// <param name="folder">The folder to create the Lua scripts at</param>
