@@ -4,7 +4,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PackageId>MattEqualsCoder.SnesConnectorLibrary</PackageId>
-        <Version>0.9.6</Version>
+        <Version>0.9.7</Version>
         <Title>SNES Connector Library</Title>
         <Authors>MattEqualsCoder</Authors>
         <Description>Library for connecting to the various methods of interacting with the SNES, including SNI, QUSB2SNES, and Lua scripts.</Description>
@@ -19,8 +19,8 @@
     <ItemGroup>
       <Protobuf Include="sni.proto" GrpcServices="Client" Link="Protos\sni.proto" />
 
-      <PackageReference Include="Google.Protobuf" Version="3.26.0" />
-      <PackageReference Include="Grpc.Net.Client" Version="2.61.0" />
+      <PackageReference Include="Google.Protobuf" Version="3.26.1" />
+      <PackageReference Include="Grpc.Net.Client" Version="2.62.0" />
       <PackageReference Include="Grpc.Tools" Version="2.62.0">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
