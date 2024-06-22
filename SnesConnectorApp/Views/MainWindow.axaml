@@ -37,7 +37,9 @@
             
             <StackPanel Orientation="Horizontal" Margin="0 5">
                 <Button Name="RefillHealthButton" Click="RefillHealthButton_OnClick" IsEnabled="{Binding IsConnected}">Refill Health</Button>
-                <Button Margin="10 0" Name="GiveItemButton" Click="GiveItemButton_OnClick" IsEnabled="{Binding IsConnected}">Give Item</Button>
+                <Button Margin="10 0 0 0" Name="RefillHealthAsyncButton" Click="RefillHealthAsyncButton_OnClick" IsEnabled="{Binding IsConnected}">Refill Health (Async)</Button>
+                <Button Margin="10 0 0 0" Name="GiveItemButton" Click="GiveItemButton_OnClick" IsEnabled="{Binding IsConnected}">Give Item</Button>
+                <Button Margin="10 0 0 0" Name="GiveItemButtonAsync" Click="GiveItemButtonAsync_OnClick" IsEnabled="{Binding IsConnected}">Give Item (Async)</Button>
             </StackPanel>
             
             <controls:CardControl HeaderText="Roms" Margin="0 5 0 0">

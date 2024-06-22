@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using AvaloniaControls.ControlServices;
 using Microsoft.Extensions.Logging;
 using SnesConnectorApp.ViewModels;
@@ -177,6 +178,66 @@ public class MainWindowService(ILogger<MainWindowService> logger, ISnesConnector
             });
         }
     }
+    
+    public async Task RefillHealthAsync()
+    {
+        logger.LogInformation("RefillHealthAsync Started");
+        
+        if (Model.CurrentGame == "Super Metroid")
+        {
+            // First request the max energy for the player
+            var response = await snesConnectorService.MakeMemoryRequestAsync(new SnesSingleMemoryRequest()
+            {
+                MemoryRequestType = SnesMemoryRequestType.RetrieveMemory,
+                SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
+                AddressFormat = AddressFormat.Snes9x,
+                SniMemoryMapping = MemoryMapping.ExHiRom,
+                Address = 0x7E09C4,
+                Length = 2
+            });
+
+            if (!response.Successful || !response.HasData) return;
+            
+            // Set the current energy to the max energy
+            await snesConnectorService.MakeMemoryRequestAsync(new SnesSingleMemoryRequest()
+            {
+                MemoryRequestType = SnesMemoryRequestType.UpdateMemory, 
+                SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
+                AddressFormat = AddressFormat.Snes9x,
+                SniMemoryMapping = MemoryMapping.ExHiRom,
+                Address = 0x7E09C2,
+                Data = response.Data.Raw
+            });
+        }
+        else
+        {
+            // Request the max hearts
+            var response = await snesConnectorService.MakeMemoryRequestAsync(new SnesSingleMemoryRequest()
+            {
+                MemoryRequestType = SnesMemoryRequestType.RetrieveMemory,
+                SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
+                AddressFormat = AddressFormat.Snes9x,
+                SniMemoryMapping = MemoryMapping.ExHiRom,
+                Address = 0x7EF36C,
+                Length = 1
+            });
+
+            if (!response.Successful || !response.HasData) return;
+            
+            // Set the player's health to their max hearts
+            await snesConnectorService.MakeMemoryRequestAsync(new SnesSingleMemoryRequest()
+            {
+                MemoryRequestType = SnesMemoryRequestType.UpdateMemory, 
+                SnesMemoryDomain = SnesMemoryDomain.ConsoleRAM,
+                AddressFormat = AddressFormat.Snes9x,
+                SniMemoryMapping = MemoryMapping.ExHiRom,
+                Address = 0x7EF372,
+                Data = response.Data.Raw
+            });
+        }
+        
+        logger.LogInformation("RefillHealthAsync Complete");
+    }
 
     public void GiveItem()
     {
@@ -216,6 +277,49 @@ public class MainWindowService(ILogger<MainWindowService> logger, ISnesConnector
                 });
             }
         });
+    }
+    
+    public async Task GiveItemAsync()
+    {
+        logger.LogInformation("GiveItemAsync Started");
+        
+        var response = await snesConnectorService.MakeMemoryRequestAsync(new SnesSingleMemoryRequest()
+        {
+            MemoryRequestType = SnesMemoryRequestType.RetrieveMemory,
+            SnesMemoryDomain = SnesMemoryDomain.CartridgeSave,
+            AddressFormat = AddressFormat.Snes9x,
+            SniMemoryMapping = MemoryMapping.ExHiRom,
+            Address = 0xA26602,
+            Length = 2
+        });
+
+        if (!response.Successful || !response.HasData) return;
+        
+        var giftedItemCount = response.Data.ReadUInt16(0)!;
+        
+        // Give the player the item from "player 0"
+        await snesConnectorService.MakeMemoryRequestAsync(new SnesSingleMemoryRequest()
+        {
+            MemoryRequestType = SnesMemoryRequestType.UpdateMemory, 
+            SnesMemoryDomain = SnesMemoryDomain.CartridgeSave,
+            AddressFormat = AddressFormat.Snes9x,
+            SniMemoryMapping = MemoryMapping.ExHiRom,
+            Address = 0xA26000 + giftedItemCount.Value * 4,
+            Data = Int16ToBytes(0).Concat(Int16ToBytes(0x36)).ToArray()
+        });
+                
+        // Increase the number of gifted items by 1
+        await snesConnectorService.MakeMemoryRequestAsync(new SnesSingleMemoryRequest()
+        {
+            MemoryRequestType = SnesMemoryRequestType.UpdateMemory, 
+            SnesMemoryDomain = SnesMemoryDomain.CartridgeSave,
+            AddressFormat = AddressFormat.Snes9x,
+            SniMemoryMapping = MemoryMapping.ExHiRom,
+            Address = 0xA26602,
+            Data = Int16ToBytes(giftedItemCount.Value + 1)
+        });
+        
+        logger.LogInformation("GiveItemAsync Complete");
     }
 
     public void ScanFiles()

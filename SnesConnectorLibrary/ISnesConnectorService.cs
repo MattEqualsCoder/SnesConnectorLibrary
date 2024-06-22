@@ -95,6 +95,14 @@ public interface ISnesConnectorService : IDisposable
     /// <param name="request">The request to make to the SNES</param>
     /// <returns>True if the request can be made to the connector</returns>
     public bool MakeMemoryRequest(SnesSingleMemoryRequest request);
+    
+    /// <summary>
+    /// Makes a single request to either GET or PUT memory to the SNES via the active connector. Reading/writing the ROM
+    /// is not supported on snes9x cores and in SNI.
+    /// </summary>
+    /// <param name="request">The request to make to the SNES</param>
+    /// <returns>Response object with the requested memory</returns>
+    public Task<SnesSingleMemoryResponse> MakeMemoryRequestAsync(SnesSingleMemoryRequest request);
 
     /// <summary>
     /// Requests a list of files from the SNES. Only supported on hardware connected via SNI and USB2SNES.
@@ -102,6 +110,13 @@ public interface ISnesConnectorService : IDisposable
     /// <param name="request">The request to make to the snes</param>
     /// <returns>True if the request can be made to the connector</returns>
     public bool GetFileList(SnesFileListRequest request);
+    
+    /// <summary>
+    /// Requests a list of files from the SNES. Only supported on hardware connected via SNI and USB2SNES.
+    /// </summary>
+    /// <param name="request">The request to make to the snes</param>
+    /// <returns>Response object with the file list</returns>
+    public Task<SnesFileListResponse> GetFileListAsync(SnesFileListRequest request);
 
     /// <summary>
     /// Attempts to boot a rom on the SNES. Only supported on hardware connected via SNI and USB2SNES.
@@ -109,6 +124,13 @@ public interface ISnesConnectorService : IDisposable
     /// <param name="request">The request to make to the SNES</param>
     /// <returns>True if the request can be made to the connector</returns>
     public bool BootRom(SnesBootRomRequest request);
+    
+    /// <summary>
+    /// Attempts to boot a rom on the SNES. Only supported on hardware connected via SNI and USB2SNES.
+    /// </summary>
+    /// <param name="request">The request to make to the SNES</param>
+    /// <returns>Response object for if booting could be performed</returns>
+    public Task<SnesBootRomResponse> BootRomAsync(SnesBootRomRequest request);
 
     /// <summary>
     /// Attepts to upload a file to the SNES. Only supported on hardware connected via SNI and USB2SNES.
@@ -118,11 +140,25 @@ public interface ISnesConnectorService : IDisposable
     public bool UploadFile(SnesUploadFileRequest request);
     
     /// <summary>
+    /// Attepts to upload a file to the SNES. Only supported on hardware connected via SNI and USB2SNES.
+    /// </summary>
+    /// <param name="request">The request to make to the SNES</param>
+    /// <returns>Response object for if the request could be performed</returns>
+    public Task<SnesUploadFileResponse> UploadFileAsync(SnesUploadFileRequest request);
+    
+    /// <summary>
     /// Attepts to delete a file from the SNES. Only supported on hardware connected via SNI and USB2SNES.
     /// </summary>
     /// <param name="request">The request to make to the SNES</param>
     /// <returns>True if the request can be made to the connector</returns>
     public bool DeleteFile(SnesDeleteFileRequest request);
+    
+    /// <summary>
+    /// Attepts to delete a file from the SNES. Only supported on hardware connected via SNI and USB2SNES.
+    /// </summary>
+    /// <param name="request">The request to make to the SNES</param>
+    /// <returns>Response object for if the request could be performed</returns>
+    public Task<SnesDeleteFileResponse> DeleteFileAsync(SnesDeleteFileRequest request);
 
     /// <summary>
     /// Makes a recurring scheduled request to the SNES via the active connector

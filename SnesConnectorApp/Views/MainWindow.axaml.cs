@@ -50,6 +50,7 @@ public partial class MainWindow : RestorableWindow
     {
         _service?.RefillHealth();
     }
+    
 
     private void GiveItemButton_OnClick(object? sender, RoutedEventArgs e)
     {
@@ -74,5 +75,15 @@ public partial class MainWindow : RestorableWindow
     private void DeleteRomButton_OnClick(object? sender, RoutedEventArgs e)
     {
         _service?.DeleteFile();
+    }
+
+    private void RefillHealthAsyncButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _ = _service?.RefillHealthAsync();
+    }
+
+    private void GiveItemButtonAsync_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _ = _service?.GiveItemAsync();
     }
 }

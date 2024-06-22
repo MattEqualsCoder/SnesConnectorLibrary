@@ -113,10 +113,144 @@ internal class SnesConnectorService : ISnesConnectorService
     }
 
     public bool GetFileList(SnesFileListRequest request) => MakeRequest(request);
+    public Task<SnesFileListResponse> GetFileListAsync(SnesFileListRequest request)
+    {
+        var previousAction = request.OnResponse;
+
+        var tcs = new TaskCompletionSource<SnesFileListResponse>();
+
+        request.OnResponse = files =>
+        {
+            previousAction?.Invoke(files);
+            tcs.SetResult(new SnesFileListResponse()
+            {
+                Successful = true,
+                Files = files
+            });
+        };
+
+        if (!GetFileList(request))
+        {
+            tcs.SetResult(new SnesFileListResponse()
+            {
+                Successful = false,
+                Files = new List<SnesFile>()
+            });
+        }
+
+        return tcs.Task;
+    }
+    
     public bool BootRom(SnesBootRomRequest request) => MakeRequest(request);
+    public Task<SnesBootRomResponse> BootRomAsync(SnesBootRomRequest request)
+    {
+        var previousAction = request.OnComplete;
+
+        var tcs = new TaskCompletionSource<SnesBootRomResponse>();
+
+        request.OnComplete = () =>
+        {
+            previousAction?.Invoke();
+            tcs.SetResult(new SnesBootRomResponse()
+            {
+                Successful = true
+            });
+        };
+
+        if (!BootRom(request))
+        {
+            tcs.SetResult(new SnesBootRomResponse()
+            {
+                Successful = false
+            });
+        }
+
+        return tcs.Task;
+    }
+    
     public bool UploadFile(SnesUploadFileRequest request) => MakeRequest(request);
+    public Task<SnesUploadFileResponse> UploadFileAsync(SnesUploadFileRequest request)
+    {
+        var previousAction = request.OnComplete;
+
+        var tcs = new TaskCompletionSource<SnesUploadFileResponse>();
+
+        request.OnComplete = () =>
+        {
+            previousAction?.Invoke();
+            tcs.SetResult(new SnesUploadFileResponse()
+            {
+                Successful = true
+            });
+        };
+
+        if (!UploadFile(request))
+        {
+            tcs.SetResult(new SnesUploadFileResponse()
+            {
+                Successful = false
+            });
+        }
+
+        return tcs.Task;
+    }
+    
     public bool DeleteFile(SnesDeleteFileRequest request) => MakeRequest(request);
+    public Task<SnesDeleteFileResponse> DeleteFileAsync(SnesDeleteFileRequest request)
+    {
+        var previousAction = request.OnComplete;
+
+        var tcs = new TaskCompletionSource<SnesDeleteFileResponse>();
+
+        request.OnComplete = () =>
+        {
+            previousAction?.Invoke();
+            tcs.SetResult(new SnesDeleteFileResponse()
+            {
+                Successful = true
+            });
+        };
+
+        if (!DeleteFile(request))
+        {
+            tcs.SetResult(new SnesDeleteFileResponse()
+            {
+                Successful = false
+            });
+        }
+
+        return tcs.Task;
+    }
+    
     public bool MakeMemoryRequest(SnesSingleMemoryRequest request) => MakeRequest(request);
+
+    public Task<SnesSingleMemoryResponse> MakeMemoryRequestAsync(SnesSingleMemoryRequest request)
+    {
+        var previousAction = request.OnResponse;
+
+        var tcs = new TaskCompletionSource<SnesSingleMemoryResponse>();
+
+        request.OnResponse = (data, prevData) =>
+        {
+            previousAction?.Invoke(data, prevData);
+            tcs.SetResult(new SnesSingleMemoryResponse
+            {
+                Successful = true,
+                Data = data
+            });
+        };
+
+        if (!MakeMemoryRequest(request))
+        {
+            tcs.SetResult(new SnesSingleMemoryResponse
+            {
+                Successful = false,
+                Data = new SnesData(Array.Empty<byte>())
+            });
+        }
+
+        return tcs.Task;
+    }
 
     public bool MakeRequest(SnesRequest request)
     {
@@ -300,6 +434,11 @@ internal class SnesConnectorService : ISnesConnectorService
     private void CurrentConnectorOnMemoryUpdated(object sender, SnesResponseEventArgs<SnesMemoryRequest> e)
     {
         MemoryUpdated?.Invoke(sender, e);
+
+        if (e.Request is SnesSingleMemoryRequest && e.Request.OnResponse != null)
+        {
+            InvokeRequest(e.Request, new SnesData(Array.Empty<byte>()) , null);
+        }
     }
 
     private void InvokeRequest(SnesMemoryRequest request, SnesData data, SnesData? prevData)
