@@ -45,6 +45,7 @@ internal class SnesConnectorService : ISnesConnectorService
     #region Events and properties
     public event EventHandler? Connected;
     public event EventHandler? Disconnected;
+    public event EventHandler? GameDetected;
     public event SnesMemoryResponseEventHandler? MemoryReceived;
     public event SnesResponseEventHandler<SnesMemoryRequest>? MemoryUpdated;
     public event SnesFileListResponseEventHandler? FileListReceived;
@@ -567,6 +568,7 @@ internal class SnesConnectorService : ISnesConnectorService
     private void CurrentConnectorOnGameDetected(object? sender, EventArgs e)
     {
         _logger?.LogInformation("Game detected!");
+        GameDetected?.Invoke(sender, e);
     }
     #endregion
 

@@ -18,6 +18,11 @@ public interface ISnesConnectorService : IDisposable
     /// Event for when the active connector disconnects from the SNES
     /// </summary>
     public event EventHandler? Disconnected;
+    
+    /// <summary>
+    /// Event for when a game was detected in the emulator
+    /// </summary>
+    public event EventHandler? GameDetected;
 
     /// <summary>
     /// Event for when the active connector receives a message from the SNES
