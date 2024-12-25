@@ -87,7 +87,7 @@ class Program
         var window = new ExceptionWindow();
         if (ExceptionWindow.ParentWindow != null)
         {
-            window.ShowDialog(ExceptionWindow.ParentWindow);
+            await window.ShowDialog(ExceptionWindow.ParentWindow);
         }
         else
         {

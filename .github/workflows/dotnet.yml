@@ -16,25 +16,25 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 9.0.x
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore  --configuration Release -p:PostBuildEvent= 
     - name: Publish Windows 64bit
       if: ${{ github.event_name != 'pull_request' }}
-      run: dotnet publish --os win --arch x64 -c Release -f net8.0 --self-contained false SnesConnectorApp/SnesConnectorApp.csproj
+      run: dotnet publish --os win --arch x64 -c Release -f net9.0 --self-contained false SnesConnectorApp/SnesConnectorApp.csproj
     - name: Publish Windows 32bit
       if: ${{ github.event_name != 'pull_request' }}
-      run: dotnet publish --os win --arch x86 -c Release -f net8.0 --self-contained false SnesConnectorApp/SnesConnectorApp.csproj
+      run: dotnet publish --os win --arch x86 -c Release -f net9.0 --self-contained false SnesConnectorApp/SnesConnectorApp.csproj
     - name: Publish Linux 64bit
       if: ${{ github.event_name != 'pull_request' }}
-      run: dotnet publish --os linux --arch x64 -c Release -f net8.0 --self-contained false SnesConnectorApp/SnesConnectorApp.csproj
+      run: dotnet publish --os linux --arch x64 -c Release -f net9.0 --self-contained false SnesConnectorApp/SnesConnectorApp.csproj
     - name: Get version number
       if: ${{ github.event_name != 'pull_request' }}
       id: version
       run: |
-        $version = (Get-Item "SnesConnectorApp\bin\Release\net8.0\win-x86\publish\SnesConnectorApp.exe").VersionInfo.ProductVersion
+        $version = (Get-Item "SnesConnectorApp\bin\Release\net9.0\win-x86\publish\SnesConnectorApp.exe").VersionInfo.ProductVersion
         $version = $version -replace "\+.*", ""
         Write-Output "number=$version" >> $env:GITHUB_OUTPUT
       shell: pwsh
@@ -50,21 +50,21 @@ jobs:
       shell: pwsh
       run: |
         $outputFile = "$pwd\Output\SnesConnectorApp_Win64_${{ steps.version.outputs.number }}.zip"
-        Set-Location SnesConnectorApp\bin\Release\net8.0\win-x64\publish
+        Set-Location SnesConnectorApp\bin\Release\net9.0\win-x64\publish
         Compress-Archive -Path * -DestinationPath $outputFile
     - name: Building the Win 32bit package
       if: ${{ github.event_name != 'pull_request' }}
       shell: pwsh
       run: |
         $outputFile = "$pwd\Output\SnesConnectorApp_Win32_${{ steps.version.outputs.number }}.zip"
-        Set-Location SnesConnectorApp\bin\Release\net8.0\win-x86\publish
+        Set-Location SnesConnectorApp\bin\Release\net9.0\win-x86\publish
         Compress-Archive -Path * -DestinationPath $outputFile
     - name: Building the Linux 64bit package
       if: ${{ github.event_name != 'pull_request' }}
       shell: pwsh
       run: |
         $outputFile = "$pwd\Output\SnesConnectorApp_Linux_${{ steps.version.outputs.number }}.tar.gz"
-        Set-Location SnesConnectorApp\bin\Release\net8.0\linux-x64\publish
+        Set-Location SnesConnectorApp\bin\Release\net9.0\linux-x64\publish
         tar -cvzf $outputFile *
     - name: Upload artifact
       uses: actions/upload-artifact@v4

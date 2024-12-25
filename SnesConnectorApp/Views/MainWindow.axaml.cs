@@ -1,7 +1,5 @@
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using AvaloniaControls;
 using AvaloniaControls.Controls;
 using AvaloniaControls.Models;
@@ -39,7 +37,7 @@ public partial class MainWindow : RestorableWindow
 
     protected override string RestoreFilePath => "main-window.json";
     protected override int DefaultWidth => 800;
-    protected override int DefualtHeight => 385;
+    protected override int DefaultHeight => 385;
 
     private void EnumComboBox_OnValueChanged(object sender, EnumValueChangedEventArgs args)
     {

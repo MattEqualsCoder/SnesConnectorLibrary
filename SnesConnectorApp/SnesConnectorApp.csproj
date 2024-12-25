@@ -5,26 +5,26 @@
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-        <Version>0.9.9</Version>
-        <TargetFrameworks>net8.0</TargetFrameworks>
+        <Version>1.0.0-beta.1</Version>
+        <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     </PropertyGroup>
 
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="11.0.10" />
-        <PackageReference Include="Avalonia.Desktop" Version="11.0.10" />
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.10" />
+        <PackageReference Include="Avalonia" Version="11.2.3" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.2.3" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.3" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.10" />
-        <PackageReference Include="Avalonia.Themes.Simple" Version="11.0.10" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.2.3" />
+        <PackageReference Include="Avalonia.Themes.Simple" Version="11.2.3" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
         <PackageReference Include="ReactiveUI.Fody" Version="19.5.41" />
-        <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
-        <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
-        <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.0" />
-        <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
-        <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
-        <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+        <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
+        <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" />
+        <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+        <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+        <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
     </ItemGroup>
 
 
@@ -34,14 +34,15 @@
 
 
     <ItemGroup>
+      <Reference Include="Avalonia.ReactiveUI">
+        <HintPath>..\..\..\.nuget\packages\avalonia.reactiveui\11.2.3\lib\net8.0\Avalonia.ReactiveUI.dll</HintPath>
+      </Reference>
+      <Reference Include="AvaloniaControls">
+        <HintPath>..\..\..\.nuget\packages\mattequalscoder.avaloniacontrols\1.5.0\lib\net8.0\AvaloniaControls.dll</HintPath>
+      </Reference>
       <Reference Include="Serilog">
         <HintPath>..\..\..\..\.nuget\packages\serilog\3.1.1\lib\net7.0\Serilog.dll</HintPath>
       </Reference>
-    </ItemGroup>
-
-
-    <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
-      <PackageReference Include="MattEqualsCoder.AvaloniaControls" Version="0.9.13" />
     </ItemGroup>
 
 
@@ -49,5 +50,10 @@
       <None Update="appsettings.json">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+    </ItemGroup>
+
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+      <PackageReference Include="MattEqualsCoder.AvaloniaControls" Version="1.5.0" />
     </ItemGroup>
 </Project>
