@@ -338,6 +338,23 @@ public class MainWindowService(ILogger<MainWindowService> logger, ISnesConnector
             }
         });
     }
+    
+    public void ScanFolders()
+    {
+        Model.Status = "Scanning for folders";
+        snesConnectorService.GetFileList(new SnesFileListRequest()
+        {
+            Path = "",
+            Recursive = true,
+            Filter = file => file.IsFolder,
+            OnResponse = (files) =>
+            {
+                Model.Roms = files.Select(x => x.FullPath).ToList();
+                Model.SelectedRom = Model.Roms.First();
+                Model.Status = $"{Model.Roms.Count} folders found";
+            }
+        });
+    }
 
     public void BootRom()
     {
@@ -377,6 +394,26 @@ public class MainWindowService(ILogger<MainWindowService> logger, ISnesConnector
             {
                 Model.Status = $"Upload of {filePath} complete";
                 ScanFiles();
+            }
+        });
+    }
+    
+    public void CreateDirectory(string? path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            return;
+        }
+        
+        Model.Status = $"Creating directory {path}";
+
+        snesConnectorService.CreateDirectory(new SnesCreateDirectoryRequest()
+        {
+            Path = path,
+            OnComplete = () =>
+            {
+                Model.Status = $"Creating of directory {path} complete";
+                ScanFolders();
             }
         });
     }

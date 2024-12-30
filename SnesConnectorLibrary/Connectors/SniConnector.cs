@@ -48,7 +48,9 @@ internal class SniConnector : ISnesConnector
     public event SnesResponseEventHandler<SnesBootRomRequest>? RomBooted;
     public event SnesResponseEventHandler<SnesUploadFileRequest>? FileUploaded;
     public event SnesResponseEventHandler<SnesDeleteFileRequest>? FileDeleted;
-    
+    public event SnesResponseEventHandler<SnesCreateDirectoryRequest>? DirectoryCreated;
+    public event SnesResponseEventHandler<SnesDeleteDirectoryRequest>? DirectoryDeleted;
+
     public bool IsConnected { get; private set; }
     public bool IsGameDetected { get; private set; }
     public bool CanProcessRequests => IsConnected && !string.IsNullOrEmpty(_deviceAddress) && _pendingRequest == null;
@@ -273,6 +275,47 @@ internal class SniConnector : ISnesConnector
 
         _pendingRequest = null;
     }
+
+    public async Task CreateDirectory(SnesCreateDirectoryRequest request)
+    {
+        if (_filesystem == null)
+        {
+            throw new InvalidOperationException("SNI Connector not initialized");
+        }
+        
+        _pendingRequest = request;
+        
+        await _filesystem.MakeDirectoryAsync(new MakeDirectoryRequest()
+        {
+            Uri = _deviceAddress,
+            Path = request.Path,
+        });
+        
+        DirectoryCreated?.Invoke(this, new SnesResponseEventArgs<SnesCreateDirectoryRequest>() { Request = request });
+
+        _pendingRequest = null;
+    }
+
+    public async Task DeleteDirectory(SnesDeleteDirectoryRequest request)
+    {
+        if (_filesystem == null)
+        {
+            throw new InvalidOperationException("SNI Connector not initialized");
+        }
+        
+        _pendingRequest = request;
+        
+        await _filesystem.RemoveFileAsync(new RemoveFileRequest()
+        {
+            Uri = _deviceAddress,
+            Path = request.Path,
+        });
+        
+        DirectoryDeleted?.Invoke(this, new SnesResponseEventArgs<SnesDeleteDirectoryRequest>() { Request = request });
+
+        _pendingRequest = null;
+    }
+
     #endregion
 
     #region Private methods

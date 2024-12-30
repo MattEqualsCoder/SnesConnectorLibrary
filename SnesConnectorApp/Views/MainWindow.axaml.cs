@@ -1,3 +1,4 @@
+using System;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using AvaloniaControls;
@@ -83,5 +84,36 @@ public partial class MainWindow : RestorableWindow
     private void GiveItemButtonAsync_OnClick(object? sender, RoutedEventArgs e)
     {
         _ = _service?.GiveItemAsync();
+    }
+
+    private void ScanFoldersButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        _service?.ScanFolders();
+    }
+
+    private async void CreateDirectoryButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var messageWindow = new MessageWindow(new MessageWindowRequest()
+            {
+                Buttons = MessageWindowButtons.OKCancel,
+                DisplayTextBox = true,
+                Message = "Enter the directory path you want to create",
+            });
+        
+            await messageWindow.ShowDialog(this);
+
+            if (messageWindow.DialogResult?.PressedAcceptButton != true)
+            {
+                return;
+            }
+        
+            _service?.CreateDirectory(messageWindow.DialogResult.ResponseText);
+        }
+        catch
+        {
+            // Do nothing
+        }
     }
 }

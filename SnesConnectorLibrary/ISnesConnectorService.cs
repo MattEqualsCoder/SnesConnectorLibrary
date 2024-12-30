@@ -55,6 +55,16 @@ public interface ISnesConnectorService : IDisposable
     public event SnesResponseEventHandler<SnesDeleteFileRequest>? FileDeleted;
     
     /// <summary>
+    /// Event for when a directory has been created on the SNES
+    /// </summary>
+    public event SnesResponseEventHandler<SnesCreateDirectoryRequest>? DirectoryCreated;
+    
+    /// <summary>
+    /// Event for when a directory has been deleted from the SNES
+    /// </summary>
+    public event SnesResponseEventHandler<SnesDeleteDirectoryRequest>? DirectoryDeleted;
+    
+    /// <summary>
     /// Creates the default instance of an ISnesConnectorService
     /// </summary>
     /// <returns>The created ISnesConnectorService</returns>
@@ -164,6 +174,34 @@ public interface ISnesConnectorService : IDisposable
     /// <param name="request">The request to make to the SNES</param>
     /// <returns>Response object for if the request could be performed</returns>
     public Task<SnesDeleteFileResponse> DeleteFileAsync(SnesDeleteFileRequest request);
+    
+    /// <summary>
+    /// Attempts to create a directory on the SNES. Only supported on hardware connected via SNI and USB2SNES.
+    /// </summary>
+    /// <param name="request">The request to make to the SNES</param>
+    /// <returns>True if the request can be made to the connector</returns>
+    public bool CreateDirectory(SnesCreateDirectoryRequest request);
+    
+    /// <summary>
+    /// Attempts to create a directory on the SNES. Only supported on hardware connected via SNI and USB2SNES.
+    /// </summary>
+    /// <param name="request">The request to make to the SNES</param>
+    /// <returns>Response object for if the request could be performed</returns>
+    public Task<SnesCreateDirectoryResponse> CreateDirectoryAsync(SnesCreateDirectoryRequest request);
+    
+    /// <summary>
+    /// Attempts to delete a directory from the SNES. Only supported on hardware connected via SNI and USB2SNES.
+    /// </summary>
+    /// <param name="request">The request to make to the SNES</param>
+    /// <returns>True if the request can be made to the connector</returns>
+    public bool DeleteDirectory(SnesDeleteDirectoryRequest request);
+    
+    /// <summary>
+    /// Attempts to delete a directory from the SNES. Only supported on hardware connected via SNI and USB2SNES.
+    /// </summary>
+    /// <param name="request">The request to make to the SNES</param>
+    /// <returns>Response object for if the request could be performed</returns>
+    public Task<SnesDeleteDirectoryResponse> DeleteDirectoryAsync(SnesDeleteDirectoryRequest request);
 
     /// <summary>
     /// Makes a recurring scheduled request to the SNES via the active connector

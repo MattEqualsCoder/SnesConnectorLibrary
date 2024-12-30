@@ -6,5 +6,7 @@ internal enum SnesRequestType
     GetFileList,
     UploadFile,
     BootRom,
-    DeleteFile
+    DeleteFile,
+    MakeDirectory,
+    DeleteDirectory,
 }

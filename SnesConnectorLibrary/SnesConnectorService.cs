@@ -52,6 +52,8 @@ internal class SnesConnectorService : ISnesConnectorService
     public event SnesResponseEventHandler<SnesBootRomRequest>? RomBooted;
     public event SnesResponseEventHandler<SnesUploadFileRequest>? FileUploaded;
     public event SnesResponseEventHandler<SnesDeleteFileRequest>? FileDeleted;
+    public event SnesResponseEventHandler<SnesCreateDirectoryRequest>? DirectoryCreated;
+    public event SnesResponseEventHandler<SnesDeleteDirectoryRequest>? DirectoryDeleted;
 
     public bool IsConnected => _currentConnector?.IsConnected == true;
     
@@ -89,6 +91,8 @@ internal class SnesConnectorService : ISnesConnectorService
         _currentConnector.RomBooted += CurrentConnectorOnRomBooted;
         _currentConnector.FileUploaded += CurrentConnectorOnFileUploaded;
         _currentConnector.FileDeleted += CurrentConnectorOnFileDeleted;
+        _currentConnector.DirectoryCreated += CurrentConnectorOnDirectoryCreated;
+        _currentConnector.DirectoryDeleted += CurrentConnectorOnDirectoryDeleted;
         _currentConnector.Enable(settings);
         _previousRequestData.Clear();
     }
@@ -110,6 +114,8 @@ internal class SnesConnectorService : ISnesConnectorService
         _currentConnector.RomBooted -= CurrentConnectorOnRomBooted;
         _currentConnector.FileUploaded -= CurrentConnectorOnFileUploaded;
         _currentConnector.FileDeleted -= CurrentConnectorOnFileDeleted;
+        _currentConnector.DirectoryCreated -= CurrentConnectorOnDirectoryCreated;
+        _currentConnector.DirectoryDeleted -= CurrentConnectorOnDirectoryDeleted;
         _currentConnector = null;
     }
 
@@ -222,7 +228,77 @@ internal class SnesConnectorService : ISnesConnectorService
 
         return tcs.Task;
     }
+
     
+    
+    public bool CreateDirectory(SnesCreateDirectoryRequest request)
+    {
+        request.Path = FixDirectory(request.Path);
+        return MakeRequest(request);
+    }
+
+    public Task<SnesCreateDirectoryResponse> CreateDirectoryAsync(SnesCreateDirectoryRequest request)
+    {
+        request.Path = FixDirectory(request.Path);
+        
+        var previousAction = request.OnComplete;
+
+        var tcs = new TaskCompletionSource<SnesCreateDirectoryResponse>();
+
+        request.OnComplete = () =>
+        {
+            previousAction?.Invoke();
+            tcs.SetResult(new SnesCreateDirectoryResponse()
+            {
+                Successful = true
+            });
+        };
+
+        if (!CreateDirectory(request))
+        {
+            tcs.SetResult(new SnesCreateDirectoryResponse()
+            {
+                Successful = false
+            });
+        }
+
+        return tcs.Task;
+    }
+
+    public bool DeleteDirectory(SnesDeleteDirectoryRequest request)
+    {
+        request.Path = FixDirectory(request.Path);
+        return MakeRequest(request);
+    }
+
+    public Task<SnesDeleteDirectoryResponse> DeleteDirectoryAsync(SnesDeleteDirectoryRequest request)
+    {
+        request.Path = FixDirectory(request.Path);
+        
+        var previousAction = request.OnComplete;
+
+        var tcs = new TaskCompletionSource<SnesDeleteDirectoryResponse>();
+
+        request.OnComplete = () =>
+        {
+            previousAction?.Invoke();
+            tcs.SetResult(new SnesDeleteDirectoryResponse()
+            {
+                Successful = true
+            });
+        };
+
+        if (!DeleteDirectory(request))
+        {
+            tcs.SetResult(new SnesDeleteDirectoryResponse()
+            {
+                Successful = false
+            });
+        }
+
+        return tcs.Task;
+    }
+
     public bool MakeMemoryRequest(SnesSingleMemoryRequest request) => MakeRequest(request);
 
     public Task<SnesSingleMemoryResponse> MakeMemoryRequestAsync(SnesSingleMemoryRequest request)
@@ -535,6 +611,18 @@ internal class SnesConnectorService : ISnesConnectorService
             _logger?.LogDebug("Deleting file {Path}", deleteFileRequest.Path);
             await _currentConnector!.DeleteFile(deleteFileRequest);
         }
+        else if (request.RequestType == SnesRequestType.MakeDirectory &&
+                 request is SnesCreateDirectoryRequest createDirectoryRequest)
+        {
+            _logger?.LogDebug("Creating directory {Path}", createDirectoryRequest.Path);
+            await _currentConnector!.CreateDirectory(createDirectoryRequest);
+        }
+        else if (request.RequestType == SnesRequestType.DeleteDirectory &&
+                 request is SnesDeleteDirectoryRequest deleteDirectoryRequest)
+        {
+            _logger?.LogDebug("Deleting directory {Path}", deleteDirectoryRequest.Path);
+            await _currentConnector!.DeleteDirectory(deleteDirectoryRequest);
+        }
     }
     
     private void CurrentConnectorOnFileDeleted(object sender, SnesResponseEventArgs<SnesDeleteFileRequest> e)
@@ -569,6 +657,37 @@ internal class SnesConnectorService : ISnesConnectorService
     {
         _logger?.LogInformation("Game detected!");
         GameDetected?.Invoke(sender, e);
+    }
+    
+    private void CurrentConnectorOnDirectoryCreated(object sender, SnesResponseEventArgs<SnesCreateDirectoryRequest> e)
+    {
+        _logger?.LogInformation("{Path} created", e.Request.Path);
+        DirectoryCreated?.Invoke(sender, e);
+        e.Request.OnComplete?.Invoke();
+    }
+    
+    private void CurrentConnectorOnDirectoryDeleted(object sender, SnesResponseEventArgs<SnesDeleteDirectoryRequest> e)
+    {
+        _logger?.LogInformation("{Path} deleted", e.Request.Path);
+        DirectoryDeleted?.Invoke(sender, e);
+        e.Request.OnComplete?.Invoke();
+    }
+
+    private string FixDirectory(string path)
+    {
+        path = path.Replace("\\", "/");
+        
+        if (!path.StartsWith('/'))
+        {
+            path = "/" + path;
+        }
+
+        if (path.EndsWith('/'))
+        {
+            path = path[..^1];
+        }
+
+        return path;
     }
     #endregion
 

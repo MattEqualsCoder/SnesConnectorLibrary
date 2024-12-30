@@ -52,6 +52,16 @@ internal interface ISnesConnector : IDisposable
     /// Event for when a file has been deleted from the SNES
     /// </summary>
     public event SnesResponseEventHandler<SnesDeleteFileRequest>? FileDeleted;
+    
+    /// <summary>
+    /// Event for when a directed has been created on the SNES
+    /// </summary>
+    public event SnesResponseEventHandler<SnesCreateDirectoryRequest>? DirectoryCreated;
+
+    /// <summary>
+    /// Event for when a directory has been deleted from the SNES
+    /// </summary>
+    public event SnesResponseEventHandler<SnesDeleteDirectoryRequest>? DirectoryDeleted;
 
     /// <summary>
     /// Enables the connector to start attempting to connect to the SNES
@@ -133,4 +143,16 @@ internal interface ISnesConnector : IDisposable
     /// </summary>
     /// <param name="request">The request to send to the SNES</param>
     public Task DeleteFile(SnesDeleteFileRequest request);
+    
+    /// <summary>
+    /// Creates a directory on the SNES
+    /// </summary>
+    /// <param name="request">The request to send to the SNES</param>
+    public Task CreateDirectory(SnesCreateDirectoryRequest request);
+    
+    /// <summary>
+    /// Deletes a directory from the SNES
+    /// </summary>
+    /// <param name="request">The request to send to the SNES</param>
+    public Task DeleteDirectory(SnesDeleteDirectoryRequest request);
 }

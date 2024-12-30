@@ -88,6 +88,20 @@
                                     IsEnabled="{Binding CanBootDeleteFile}"
                                 >Deleted Selected Rom</Button>
                                 
+                                <Button 
+                                    Margin="5" 
+                                    Name="ScanFoldersButton" 
+                                    Click="ScanFoldersButton_OnClick"
+                                    IsEnabled="{Binding IsConnected}"
+                                >Scan Folders</Button>
+                                
+                                <Button 
+                                    Margin="5" 
+                                    Name="CreateDirectoryButton" 
+                                    Click="CreateDirectoryButton_OnClick"
+                                    IsEnabled="{Binding IsConnected}"
+                                >Create Folder</Button>
+                                
                             </StackPanel>
                         </Grid>
                         

@@ -18,5 +18,6 @@ public class MainWindowViewModel : ViewModelBase
     [Reactive]
     [ReactiveLinkedProperties(nameof(CanBootDeleteFile))]
     public string? SelectedRom { get; set; }
+    
     public bool CanBootDeleteFile => !string.IsNullOrEmpty(SelectedRom);
 }

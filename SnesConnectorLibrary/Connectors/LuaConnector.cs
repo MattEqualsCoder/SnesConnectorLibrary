@@ -44,7 +44,9 @@ internal abstract class LuaConnector : ISnesConnector
     public event SnesResponseEventHandler<SnesBootRomRequest>? RomBooted;
     public event SnesResponseEventHandler<SnesUploadFileRequest>? FileUploaded;
     public event SnesResponseEventHandler<SnesDeleteFileRequest>? FileDeleted;
-    
+    public event SnesResponseEventHandler<SnesCreateDirectoryRequest>? DirectoryCreated;
+    public event SnesResponseEventHandler<SnesDeleteDirectoryRequest>? DirectoryDeleted;
+
     public bool IsConnected { get; private set; }
     
     public bool IsGameDetected { get; private set; }
@@ -117,6 +119,19 @@ internal abstract class LuaConnector : ISnesConnector
         FileDeleted?.Invoke(this, new SnesResponseEventArgs<SnesDeleteFileRequest>() { Request = request });
         return Task.CompletedTask;
     }
+
+    public Task CreateDirectory(SnesCreateDirectoryRequest request)
+    {
+        DirectoryCreated?.Invoke(this, new SnesResponseEventArgs<SnesCreateDirectoryRequest>() { Request = request });
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteDirectory(SnesDeleteDirectoryRequest request)
+    {
+        DirectoryDeleted?.Invoke(this, new SnesResponseEventArgs<SnesDeleteDirectoryRequest>() { Request = request });
+        return Task.CompletedTask;
+    }
+
     #endregion
     
     #region Protected methods

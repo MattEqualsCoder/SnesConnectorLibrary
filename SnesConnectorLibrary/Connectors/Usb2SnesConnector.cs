@@ -21,6 +21,7 @@ internal class Usb2SnesConnector : ISnesConnector
     private const string BootOpCode = "Boot";
     private const string RemoveOpCode = "Remove";
     private const string PutFileOpCode = "PutFile";
+    private const string MakeDirOpCode = "MakeDir";
     
     private readonly ILogger<Usb2SnesConnector>? _logger;
     private WebsocketClient? _client;
@@ -56,7 +57,9 @@ internal class Usb2SnesConnector : ISnesConnector
     public event SnesResponseEventHandler<SnesBootRomRequest>? RomBooted;
     public event SnesResponseEventHandler<SnesUploadFileRequest>? FileUploaded;
     public event SnesResponseEventHandler<SnesDeleteFileRequest>? FileDeleted;
-    
+    public event SnesResponseEventHandler<SnesCreateDirectoryRequest>? DirectoryCreated;
+    public event SnesResponseEventHandler<SnesDeleteDirectoryRequest>? DirectoryDeleted;
+
     public bool IsConnected { get; private set; }
     public bool IsGameDetected { get; private set; }
     public bool CanProcessRequests => IsConnected && _pendingRequest == null;
@@ -230,6 +233,8 @@ internal class Usb2SnesConnector : ISnesConnector
             case SnesRequestType.UploadFile:
             case SnesRequestType.BootRom:
             case SnesRequestType.DeleteFile:
+            case SnesRequestType.MakeDirectory:
+            case SnesRequestType.DeleteDirectory:
                 return IsConnected;
         }
 
@@ -358,6 +363,43 @@ internal class Usb2SnesConnector : ISnesConnector
         _pendingRequest = null;
         FileDeleted?.Invoke(this, new SnesResponseEventArgs<SnesDeleteFileRequest>() { Request = request });
     }
+
+    public async Task CreateDirectory(SnesCreateDirectoryRequest request)
+    {
+        _pendingRequest = request;
+
+        if (!await Send(new Usb2SnesRequest()
+            {
+                Opcode = MakeDirOpCode,
+                Space = "SNES",
+                Operands = new List<string>() { request.Path }
+            }))
+        {
+            return;
+        }
+        
+        _pendingRequest = null;
+        DirectoryCreated?.Invoke(this, new SnesResponseEventArgs<SnesCreateDirectoryRequest>() { Request = request });
+    }
+
+    public async Task DeleteDirectory(SnesDeleteDirectoryRequest request)
+    {
+        _pendingRequest = request;
+
+        if (!await Send(new Usb2SnesRequest()
+            {
+                Opcode = RemoveOpCode,
+                Space = "SNES",
+                Operands = new List<string>() { request.Path }
+            }))
+        {
+            return;
+        }
+        
+        _pendingRequest = null;
+        DirectoryDeleted?.Invoke(this, new SnesResponseEventArgs<SnesDeleteDirectoryRequest>() { Request = request });
+    }
+
     #endregion
     
     #region Private methods
