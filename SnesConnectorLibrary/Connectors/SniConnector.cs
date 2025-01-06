@@ -56,6 +56,7 @@ internal class SniConnector : ISnesConnector
     public bool CanProcessRequests => IsConnected && !string.IsNullOrEmpty(_deviceAddress) && _pendingRequest == null;
     public bool CanMakeRequest(SnesRequest request) => IsConnected && !string.IsNullOrEmpty(_deviceAddress) && request.CanPerformRequest(SupportedFunctionality);
     public int TranslateAddress(SnesMemoryRequest message) => message.GetTranslatedAddress(AddressFormat.FxPakPro);
+
     public ConnectorFunctionality SupportedFunctionality => _connectorFunctionality;
     #endregion
 
@@ -316,6 +317,11 @@ internal class SniConnector : ISnesConnector
         _pendingRequest = null;
     }
 
+    public void UpdateTimeoutSeconds(int seconds)
+    {
+        _timeoutSeconds = seconds;
+    }
+    
     #endregion
 
     #region Private methods

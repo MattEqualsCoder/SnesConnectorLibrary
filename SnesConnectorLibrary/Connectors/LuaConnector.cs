@@ -56,6 +56,11 @@ internal abstract class LuaConnector : ISnesConnector
     public int TranslateAddress(SnesMemoryRequest request) =>
         request.GetTranslatedAddress(TargetAddressFormat);
 
+    public void UpdateTimeoutSeconds(int seconds)
+    {
+        // Do nothing
+    }
+
     public ConnectorFunctionality SupportedFunctionality => new()
     {
         CanReadMemory = true,

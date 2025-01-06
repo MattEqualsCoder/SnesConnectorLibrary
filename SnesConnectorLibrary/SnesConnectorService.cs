@@ -442,6 +442,11 @@ internal class SnesConnectorService : ISnesConnectorService
     public ConnectorFunctionality CurrentConnectorFunctionality =>
         _currentConnector?.SupportedFunctionality ?? new ConnectorFunctionality();
 
+    public void UpdateTimeoutSeconds(int seconds)
+    {
+        _currentConnector?.UpdateTimeoutSeconds(seconds);
+    }
+
     #endregion
 
     #region Private methods
@@ -593,34 +598,34 @@ internal class SnesConnectorService : ISnesConnectorService
         }
         else if (request.RequestType == SnesRequestType.GetFileList && request is SnesFileListRequest fileListRequest)
         {
-            _logger?.LogDebug("Getting files from path {Path}", fileListRequest.Path);
+            _logger?.LogInformation("Getting files from path {Path}", fileListRequest.Path);
             await _currentConnector!.ListFiles(fileListRequest);
         }
         else if (request.RequestType == SnesRequestType.BootRom && request is SnesBootRomRequest bootRomRequest)
         {
-            _logger?.LogDebug("Booting rom {Rom}", bootRomRequest.Path);
+            _logger?.LogInformation("Booting rom {Rom}", bootRomRequest.Path);
             await _currentConnector!.BootRom(bootRomRequest);
         }
         else if (request.RequestType == SnesRequestType.UploadFile && request is SnesUploadFileRequest uploadFileRequest)
         {
-            _logger?.LogDebug("Uploading file {LocalPath} to {TargetPath}", uploadFileRequest.LocalFilePath, uploadFileRequest.TargetFilePath);
+            _logger?.LogInformation("Uploading file {LocalPath} to {TargetPath}", uploadFileRequest.LocalFilePath, uploadFileRequest.TargetFilePath);
             await _currentConnector!.UploadFile(uploadFileRequest);
         }
         else if (request.RequestType == SnesRequestType.DeleteFile && request is SnesDeleteFileRequest deleteFileRequest)
         {
-            _logger?.LogDebug("Deleting file {Path}", deleteFileRequest.Path);
+            _logger?.LogInformation("Deleting file {Path}", deleteFileRequest.Path);
             await _currentConnector!.DeleteFile(deleteFileRequest);
         }
         else if (request.RequestType == SnesRequestType.MakeDirectory &&
                  request is SnesCreateDirectoryRequest createDirectoryRequest)
         {
-            _logger?.LogDebug("Creating directory {Path}", createDirectoryRequest.Path);
+            _logger?.LogInformation("Creating directory {Path}", createDirectoryRequest.Path);
             await _currentConnector!.CreateDirectory(createDirectoryRequest);
         }
         else if (request.RequestType == SnesRequestType.DeleteDirectory &&
                  request is SnesDeleteDirectoryRequest deleteDirectoryRequest)
         {
-            _logger?.LogDebug("Deleting directory {Path}", deleteDirectoryRequest.Path);
+            _logger?.LogInformation("Deleting directory {Path}", deleteDirectoryRequest.Path);
             await _currentConnector!.DeleteDirectory(deleteDirectoryRequest);
         }
     }

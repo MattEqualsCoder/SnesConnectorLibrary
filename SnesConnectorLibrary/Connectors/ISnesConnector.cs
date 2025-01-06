@@ -116,6 +116,12 @@ internal interface ISnesConnector : IDisposable
     public int TranslateAddress(SnesMemoryRequest message);
 
     /// <summary>
+    /// Updates the amount of time for a timeout when no message has been received
+    /// </summary>
+    /// <param name="seconds">The duration to set the timeout value to</param>
+    public void UpdateTimeoutSeconds(int seconds);
+
+    /// <summary>
     /// The functionality of the connector
     /// </summary>
     public ConnectorFunctionality SupportedFunctionality { get; }

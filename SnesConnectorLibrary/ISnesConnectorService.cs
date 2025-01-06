@@ -232,6 +232,12 @@ public interface ISnesConnectorService : IDisposable
     /// Retrieves the functionality of the current connector
     /// </summary>
     public ConnectorFunctionality CurrentConnectorFunctionality { get; }
+    
+    /// <summary>
+    /// Updates the amount of time for a timeout when no message has been received
+    /// </summary>
+    /// <param name="seconds">The duration to set the timeout value to</param>
+    public void UpdateTimeoutSeconds(int seconds);
 
 
 }

@@ -64,6 +64,7 @@ internal class Usb2SnesConnector : ISnesConnector
     public bool IsGameDetected { get; private set; }
     public bool CanProcessRequests => IsConnected && _pendingRequest == null;
     public int TranslateAddress(SnesMemoryRequest message) => message.GetTranslatedAddress(AddressFormat.FxPakPro);
+
     public ConnectorFunctionality SupportedFunctionality => _supportedFunctionality;
     #endregion
 
@@ -398,6 +399,16 @@ internal class Usb2SnesConnector : ISnesConnector
         
         _pendingRequest = null;
         DirectoryDeleted?.Invoke(this, new SnesResponseEventArgs<SnesDeleteDirectoryRequest>() { Request = request });
+    }
+    
+    public void UpdateTimeoutSeconds(int seconds)
+    {
+        if (_client == null)
+        {
+            return;
+        }
+        
+        _client.ReconnectTimeout = TimeSpan.FromSeconds(seconds);
     }
 
     #endregion

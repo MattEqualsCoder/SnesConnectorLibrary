@@ -59,7 +59,7 @@
                                 <controls:FileControl 
                                     Margin="5" 
                                     Watermark="Upload Rom" 
-                                    Filter="Rom Files:*.sfc,*.smc"
+                                    Filter="Rom Files:*.*"
                                     ButtonText="Upload Rom" 
                                     ShowClearButton="False"
                                     ShowTextBox="False"
