@@ -129,20 +129,34 @@ internal class SnesConnectorService : ISnesConnectorService
         request.OnResponse = files =>
         {
             previousAction?.Invoke(files);
-            tcs.SetResult(new SnesFileListResponse()
+            try
             {
-                Successful = true,
-                Files = files
-            });
+                tcs.TrySetResult(new SnesFileListResponse
+                {
+                    Successful = true,
+                    Files = files
+                });
+            }
+            catch (Exception ex)
+            {
+                // Do nothing
+            }
         };
 
         if (!GetFileList(request))
         {
-            tcs.SetResult(new SnesFileListResponse()
+            try
             {
-                Successful = false,
-                Files = new List<SnesFile>()
-            });
+                tcs.TrySetResult(new SnesFileListResponse()
+                {
+                    Successful = false,
+                    Files = new List<SnesFile>()
+                });
+            }
+            catch (Exception ex)
+            {
+                // Do nothing
+            }
         }
 
         return tcs.Task;
@@ -158,18 +172,32 @@ internal class SnesConnectorService : ISnesConnectorService
         request.OnComplete = () =>
         {
             previousAction?.Invoke();
-            tcs.SetResult(new SnesBootRomResponse()
+            try
             {
-                Successful = true
-            });
+                tcs.TrySetResult(new SnesBootRomResponse()
+                {
+                    Successful = true
+                });
+            }
+            catch (Exception ex)
+            {
+                // Do nothing
+            }
         };
 
         if (!BootRom(request))
         {
-            tcs.SetResult(new SnesBootRomResponse()
+            try
             {
-                Successful = false
-            });
+                tcs.TrySetResult(new SnesBootRomResponse()
+                {
+                    Successful = false
+                });
+            }
+            catch (Exception ex)
+            {
+                // Do nothing
+            }
         }
 
         return tcs.Task;
@@ -185,18 +213,33 @@ internal class SnesConnectorService : ISnesConnectorService
         request.OnComplete = () =>
         {
             previousAction?.Invoke();
-            tcs.SetResult(new SnesUploadFileResponse()
+            
+            try
             {
-                Successful = true
-            });
+                tcs.TrySetResult(new SnesUploadFileResponse()
+                {
+                    Successful = true
+                });
+            }
+            catch (Exception ex)
+            {
+                // Do nothing
+            }
         };
 
         if (!UploadFile(request))
         {
-            tcs.SetResult(new SnesUploadFileResponse()
+            try
             {
-                Successful = false
-            });
+                tcs.TrySetResult(new SnesUploadFileResponse()
+                {
+                    Successful = false
+                });
+            }
+            catch (Exception ex)
+            {
+                // Do nothing
+            }
         }
 
         return tcs.Task;
@@ -212,18 +255,33 @@ internal class SnesConnectorService : ISnesConnectorService
         request.OnComplete = () =>
         {
             previousAction?.Invoke();
-            tcs.SetResult(new SnesDeleteFileResponse()
+            
+            try
             {
-                Successful = true
-            });
+                tcs.TrySetResult(new SnesDeleteFileResponse()
+                {
+                    Successful = true
+                });
+            }
+            catch (Exception ex)
+            {
+                // Do nothing
+            }
         };
 
         if (!DeleteFile(request))
         {
-            tcs.SetResult(new SnesDeleteFileResponse()
+            try
             {
-                Successful = false
-            });
+                tcs.TrySetResult(new SnesDeleteFileResponse()
+                {
+                    Successful = false
+                });
+            }
+            catch (Exception ex)
+            {
+                // Do nothing
+            }
         }
 
         return tcs.Task;
@@ -248,18 +306,33 @@ internal class SnesConnectorService : ISnesConnectorService
         request.OnComplete = () =>
         {
             previousAction?.Invoke();
-            tcs.SetResult(new SnesCreateDirectoryResponse()
+            
+            try
             {
-                Successful = true
-            });
+                tcs.TrySetResult(new SnesCreateDirectoryResponse()
+                {
+                    Successful = true
+                });
+            }
+            catch (Exception ex)
+            {
+                // Do nothing
+            }
         };
 
         if (!CreateDirectory(request))
         {
-            tcs.SetResult(new SnesCreateDirectoryResponse()
+            try
             {
-                Successful = false
-            });
+                tcs.TrySetResult(new SnesCreateDirectoryResponse()
+                {
+                    Successful = false
+                });
+            }
+            catch (Exception ex)
+            {
+                // Do nothing
+            }
         }
 
         return tcs.Task;
@@ -282,18 +355,33 @@ internal class SnesConnectorService : ISnesConnectorService
         request.OnComplete = () =>
         {
             previousAction?.Invoke();
-            tcs.SetResult(new SnesDeleteDirectoryResponse()
+            
+            try
             {
-                Successful = true
-            });
+                tcs.TrySetResult(new SnesDeleteDirectoryResponse()
+                {
+                    Successful = true
+                });
+            }
+            catch (Exception ex)
+            {
+                // Do nothing
+            }
         };
 
         if (!DeleteDirectory(request))
         {
-            tcs.SetResult(new SnesDeleteDirectoryResponse()
+            try
             {
-                Successful = false
-            });
+                tcs.TrySetResult(new SnesDeleteDirectoryResponse()
+                {
+                    Successful = false
+                });
+            }
+            catch (Exception ex)
+            {
+                // Do nothing
+            }
         }
 
         return tcs.Task;
@@ -310,20 +398,34 @@ internal class SnesConnectorService : ISnesConnectorService
         request.OnResponse = (data, prevData) =>
         {
             previousAction?.Invoke(data, prevData);
-            tcs.SetResult(new SnesSingleMemoryResponse
+            try
             {
-                Successful = true,
-                Data = data
-            });
+                tcs.TrySetResult(new SnesSingleMemoryResponse
+                {
+                    Successful = true,
+                    Data = data
+                });
+            }
+            catch (Exception ex)
+            {
+                // Do nothing
+            }
         };
 
         if (!MakeMemoryRequest(request))
         {
-            tcs.SetResult(new SnesSingleMemoryResponse
+            try
             {
-                Successful = false,
-                Data = new SnesData(Array.Empty<byte>())
-            });
+                tcs.TrySetResult(new SnesSingleMemoryResponse
+                {
+                    Successful = false,
+                    Data = new SnesData(Array.Empty<byte>())
+                });
+            }
+            catch (Exception ex)
+            {
+                // Do nothing
+            }
         }
 
         return tcs.Task;
