@@ -137,7 +137,7 @@ internal class SnesConnectorService : ISnesConnectorService
                     Files = files
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Do nothing
             }
@@ -153,7 +153,7 @@ internal class SnesConnectorService : ISnesConnectorService
                     Files = new List<SnesFile>()
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Do nothing
             }
@@ -179,7 +179,7 @@ internal class SnesConnectorService : ISnesConnectorService
                     Successful = true
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Do nothing
             }
@@ -194,7 +194,7 @@ internal class SnesConnectorService : ISnesConnectorService
                     Successful = false
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Do nothing
             }
@@ -221,7 +221,7 @@ internal class SnesConnectorService : ISnesConnectorService
                     Successful = true
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Do nothing
             }
@@ -236,7 +236,7 @@ internal class SnesConnectorService : ISnesConnectorService
                     Successful = false
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Do nothing
             }
@@ -263,7 +263,7 @@ internal class SnesConnectorService : ISnesConnectorService
                     Successful = true
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Do nothing
             }
@@ -278,7 +278,7 @@ internal class SnesConnectorService : ISnesConnectorService
                     Successful = false
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Do nothing
             }
@@ -314,7 +314,7 @@ internal class SnesConnectorService : ISnesConnectorService
                     Successful = true
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Do nothing
             }
@@ -329,7 +329,7 @@ internal class SnesConnectorService : ISnesConnectorService
                     Successful = false
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Do nothing
             }
@@ -363,7 +363,7 @@ internal class SnesConnectorService : ISnesConnectorService
                     Successful = true
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Do nothing
             }
@@ -378,7 +378,7 @@ internal class SnesConnectorService : ISnesConnectorService
                     Successful = false
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Do nothing
             }
@@ -406,7 +406,7 @@ internal class SnesConnectorService : ISnesConnectorService
                     Data = data
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Do nothing
             }
@@ -422,7 +422,7 @@ internal class SnesConnectorService : ISnesConnectorService
                     Data = new SnesData(Array.Empty<byte>())
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Do nothing
             }
