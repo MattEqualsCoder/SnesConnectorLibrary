@@ -88,6 +88,7 @@ internal class LuaConnectorEmoTracker : LuaConnector
                 Type = 0x1F,
                 Address = TranslateAddress(request),
                 Block = Convert.ToBase64String(request.Data.ToArray()),
+                Size = request.Data.Count,
                 Domain = IsBizHawk ? GetDomainString(request.SnesMemoryDomain) : ""
             });
         }
@@ -110,11 +111,16 @@ internal class LuaConnectorEmoTracker : LuaConnector
 
     protected override void ProcessLine(string line, SnesMemoryRequest? request)
     {
+        if (line.StartsWith("{{"))
+        {
+            line = line[1..];
+        }
+        
         var message = JsonSerializer.Deserialize<EmoTrackerResponse>(line);
 
         if (message?.Type == 0xE2)
         {
-            IsBizHawk = message.Message != "Not Supported" && message.Message != "Unsupported";
+            IsBizHawk = !string.IsNullOrEmpty("") && message.Message != "Not Supported" && message.Message != "Unsupported";
             Logger?.LogInformation("Determined as running emulator {Type} ({Message})", IsBizHawk ? "BizHawk" : "Snes9x", message.Message);
             MarkConnected();
         }
@@ -233,5 +239,8 @@ internal class LuaConnectorEmoTracker : LuaConnector
         
         [JsonPropertyName("domain")]
         public string Domain { get; set; } = "";
+        
+        [JsonPropertyName("size")]
+        public int Size { get; set; }
     }
 }

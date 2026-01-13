@@ -276,7 +276,17 @@ internal abstract class LuaConnector : ISnesConnector
                             _lastMessageTime = DateTime.Now;
                             var prevRequest = CurrentRequest!;
                             CurrentRequest = null;
-                            ProcessLine(line, prevRequest);
+                            try
+                            {
+                                if (!string.IsNullOrWhiteSpace(line))
+                                {
+                                    ProcessLine(line, prevRequest);
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Logger?.LogError(e, "Error processing message: {Line}", line);
+                            }
                             line = await ReadNextLine(reader);
                         }
                             

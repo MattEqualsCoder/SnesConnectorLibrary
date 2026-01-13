@@ -4,7 +4,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PackageId>MattEqualsCoder.SnesConnectorLibrary</PackageId>
-        <Version>1.0.1</Version>
+        <Version>1.0.2</Version>
         <Title>SNES Connector Library</Title>
         <Authors>MattEqualsCoder</Authors>
         <Description>Library for connecting to the various methods of interacting with the SNES, including SNI, QUSB2SNES, and Lua scripts.</Description>
