@@ -1,23 +1,23 @@
 using System.Collections.Generic;
 using AvaloniaControls.Models;
-using ReactiveUI.Fody.Helpers;
+using ReactiveUI.SourceGenerators;
 using SnesConnectorLibrary;
 
 namespace SnesConnectorApp.ViewModels;
 
-public class MainWindowViewModel : ViewModelBase
+public partial class MainWindowViewModel : ViewModelBase
 {
-    [Reactive] public SnesConnectorType ConnectorType { get; set; }
-    [Reactive] public bool IsConnected { get; set; }
-    [Reactive] public string CurrentGame { get; set; } = "N/A";
-    [Reactive] public string Position { get; set; } = "N/A";
-    [Reactive] public string Title { get; set; } = "N/A";
-    [Reactive] public List<string> Roms { get; set; } = new();
-    [Reactive] public string? Status { get; set; } = "Disconnected";
+    [Reactive] public partial SnesConnectorType ConnectorType { get; set; }
+    [Reactive] public partial bool IsConnected { get; set; }
+    [Reactive] public partial string CurrentGame { get; set; } = "N/A";
+    [Reactive] public partial string Position { get; set; } = "N/A";
+    [Reactive] public partial string Title { get; set; } = "N/A";
+    [Reactive] public partial List<string> Roms { get; set; } = new();
+    [Reactive] public partial string? Status { get; set; } = "Disconnected";
     
     [Reactive]
     [ReactiveLinkedProperties(nameof(CanBootDeleteFile))]
-    public string? SelectedRom { get; set; }
+    public partial string? SelectedRom { get; set; }
     
     public bool CanBootDeleteFile => !string.IsNullOrEmpty(SelectedRom);
 }
