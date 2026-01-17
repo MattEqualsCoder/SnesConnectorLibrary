@@ -379,12 +379,22 @@ internal class SniConnector : ISnesConnector
 
         var output = new List<SnesFile>();
 
-        var files = await _filesystem.ReadDirectoryAsync(new ReadDirectoryRequest()
+        ReadDirectoryResponse? files;
+
+        try
         {
-            Uri = _deviceAddress,
-            Path = path
-        });
-        
+            files = await _filesystem.ReadDirectoryAsync(new ReadDirectoryRequest()
+            {
+                Uri = _deviceAddress,
+                Path = path
+            });
+        }
+        catch (Exception e)
+        {
+            _logger?.LogError(e, "Error reading directory {Path}", path);
+            return output;
+        }
+
         foreach (var file in files.Entries)
         {
             if (file.Name.StartsWith('.'))
